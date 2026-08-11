@@ -1,0 +1,23 @@
+import { z } from "zod";
+
+const publicSupabaseConfigSchema = z.object({
+  url: z.string().url(),
+  publishableKey: z.string().min(1),
+});
+
+export type PublicSupabaseConfig = z.infer<typeof publicSupabaseConfigSchema>;
+
+export function getPublicSupabaseConfig(): PublicSupabaseConfig {
+  const result = publicSupabaseConfigSchema.safeParse({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
+
+  if (!result.success) {
+    throw new Error(
+      "Configurazione Supabase mancante o non valida. Verifica NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    );
+  }
+
+  return result.data;
+}
