@@ -1,8 +1,10 @@
-import { Badge, Box, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Box, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 import type { Sector } from "@/features/auth/auth.types";
 import { GroupFilterBar } from "@/features/groups/GroupFilterBar";
 import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
+import { ScheduledWorkCalendar } from "@/features/scheduled-work/ScheduledWorkCalendar";
+import type { CalendarItem } from "@/features/scheduled-work/scheduled-work.types";
 
 import { SectorSelector } from "./SectorSelector";
 
@@ -11,6 +13,9 @@ type DashboardShellProps = Readonly<{
   activeSector: Sector;
   groupFilter: GroupFilterContext;
   managementNodes: readonly GroupNode[];
+  selectableGroups: readonly GroupNode[];
+  scheduledWork: readonly CalendarItem[];
+  calendarDate: string;
 }>;
 
 export function DashboardShell({
@@ -18,11 +23,14 @@ export function DashboardShell({
   activeSector,
   groupFilter,
   managementNodes,
+  selectableGroups,
+  scheduledWork,
+  calendarDate,
 }: DashboardShellProps) {
   return (
     <Stack gap="lg">
       <Paper withBorder p="md">
-        <SectorSelector sectors={sectors} activeSector={activeSector} />
+        <SectorSelector sectors={sectors} activeSector={activeSector} calendarDate={calendarDate} />
       </Paper>
 
       <GroupFilterBar
@@ -32,19 +40,15 @@ export function DashboardShell({
       />
 
       <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="lg">
-        <Paper withBorder p={{ base: "lg", sm: "xl" }} className="dashboard-calendar-placeholder">
-          <Stack gap="sm">
-            <Badge variant="light" w="fit-content">
-              Prossima fase
-            </Badge>
-            <Title order={2} size="h3">
-              Calendario
-            </Title>
-            <Text c="dimmed">
-              La pianificazione mensile di {activeSector.name} sarà disponibile nelle prossime fasi.
-            </Text>
-          </Stack>
-        </Paper>
+        <ScheduledWorkCalendar
+          sector={activeSector}
+          calendarDate={calendarDate}
+          items={scheduledWork}
+          groups={selectableGroups}
+          preferredGroupId={
+            groupFilter.selectedNode?.nodeType === "GROUP" ? groupFilter.selectedNode.id : null
+          }
+        />
 
         <Box className="dashboard-sidebar">
           <Paper withBorder p="lg">

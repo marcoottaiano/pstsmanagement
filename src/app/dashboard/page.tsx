@@ -4,11 +4,19 @@ import { redirect } from "next/navigation";
 
 import { APP_CONFIG } from "@/config/app.config";
 import { getAuthenticatedContext } from "@/features/auth/auth.data";
+import type { Sector } from "@/features/auth/auth.types";
 import { AccessNotConfigured } from "@/features/dashboard/AccessNotConfigured";
 import { DashboardHeader } from "@/features/dashboard/DashboardHeader";
 import { DashboardShell } from "@/features/dashboard/DashboardShell";
 import { SectorSelector } from "@/features/dashboard/SectorSelector";
 import { getGroupNodes, resolveGroupFilter } from "@/features/groups/groups.data";
+import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
+import { getScheduledWorkForVisibleRange } from "@/features/scheduled-work/scheduled-work.data";
+import {
+  getTodayInRome,
+  getVisibleMonthRange,
+  isValidCalendarDate,
+} from "@/features/scheduled-work/scheduled-work.dates";
 
 export const metadata: Metadata = {
   title: `Dashboard | ${APP_CONFIG.name}`,
@@ -20,8 +28,39 @@ type DashboardPageProps = Readonly<{
     selection?: string | string[];
     group?: string | string[];
     groupNotice?: string | string[];
+    date?: string | string[];
   }>;
 }>;
+
+async function getCalendarData(
+  sector: Sector,
+  groupFilter: GroupFilterContext,
+  calendarDate: string,
+) {
+  const selectableGroups = groupFilter.nodes.filter(
+    (node): node is GroupNode =>
+      node.nodeType === "GROUP" &&
+      (!groupFilter.selectedNode || groupFilter.scopeGroupIds.includes(node.id)),
+  );
+  const range = getVisibleMonthRange(calendarDate);
+  const scheduledWork = await getScheduledWorkForVisibleRange(
+    sector.id,
+    selectableGroups.map((group) => group.id),
+    range.startAt,
+    range.endAt,
+    new Map(selectableGroups.map((group) => [group.id, group.name])),
+  );
+
+  return { selectableGroups, scheduledWork };
+}
+
+function getReadyDashboardUrl(sectorCode: string, calendarDate: string, groupId?: string): string {
+  const params = new URLSearchParams({ sector: sectorCode, date: calendarDate });
+  if (groupId) {
+    params.set("group", groupId);
+  }
+  return `/dashboard?${params.toString()}`;
+}
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const [context, query] = await Promise.all([getAuthenticatedContext(), searchParams]);
@@ -32,6 +71,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const requestedSector = typeof query.sector === "string" ? query.sector : undefined;
   const requestedGroup = typeof query.group === "string" ? query.group : undefined;
+  const requestedDate = typeof query.date === "string" ? query.date : undefined;
+  const calendarDate = isValidCalendarDate(requestedDate) ? requestedDate : getTodayInRome();
+  const dateNeedsCanonicalization = requestedDate !== calendarDate;
   const sectorWasProvided = query.sector !== undefined;
   const selectionError = query.selection === "invalid";
   const groupNotice = query.groupNotice === "invalid";
@@ -55,7 +97,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     }
 
     if (requestedSector !== onlySector.code || selectionError) {
-      redirect(`/dashboard?sector=${onlySector.code}`);
+      redirect(getReadyDashboardUrl(onlySector.code, calendarDate));
     }
 
     const [groupFilter, managementNodes] = await Promise.all([
@@ -64,8 +106,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     ]);
 
     if (groupFilter.invalidSelection) {
-      redirect(`/dashboard?sector=${onlySector.code}&groupNotice=invalid`);
+      redirect(`${getReadyDashboardUrl(onlySector.code, calendarDate)}&groupNotice=invalid`);
     }
+    if (dateNeedsCanonicalization) {
+      redirect(getReadyDashboardUrl(onlySector.code, calendarDate, groupFilter.selectedNode?.id));
+    }
+
+    const { selectableGroups, scheduledWork } = await getCalendarData(
+      onlySector,
+      groupFilter,
+      calendarDate,
+    );
 
     return (
       <main className="dashboard-page">
@@ -81,6 +132,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             activeSector={onlySector}
             groupFilter={groupFilter}
             managementNodes={managementNodes}
+            selectableGroups={selectableGroups}
+            scheduledWork={scheduledWork}
+            calendarDate={calendarDate}
           />
         </Container>
       </main>
@@ -90,7 +144,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const activeSector = context.sectors.find((sector) => sector.code === requestedSector);
 
   if (sectorWasProvided && !activeSector) {
-    redirect("/dashboard?selection=invalid");
+    redirect(`/dashboard?selection=invalid&date=${calendarDate}`);
   }
 
   if (activeSector) {
@@ -100,8 +154,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     ]);
 
     if (groupFilter.invalidSelection) {
-      redirect(`/dashboard?sector=${activeSector.code}&groupNotice=invalid`);
+      redirect(`${getReadyDashboardUrl(activeSector.code, calendarDate)}&groupNotice=invalid`);
     }
+    if (dateNeedsCanonicalization) {
+      redirect(getReadyDashboardUrl(activeSector.code, calendarDate, groupFilter.selectedNode?.id));
+    }
+
+    const { selectableGroups, scheduledWork } = await getCalendarData(
+      activeSector,
+      groupFilter,
+      calendarDate,
+    );
 
     return (
       <main className="dashboard-page">
@@ -117,6 +180,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             activeSector={activeSector}
             groupFilter={groupFilter}
             managementNodes={managementNodes}
+            selectableGroups={selectableGroups}
+            scheduledWork={scheduledWork}
+            calendarDate={calendarDate}
           />
         </Container>
       </main>
@@ -127,7 +193,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <main className="dashboard-page">
       <DashboardHeader identity={context.identity} />
       <Container size="xl" py="lg">
-        <SectorSelector sectors={context.sectors} selectionError={selectionError} prominent />
+        <SectorSelector
+          sectors={context.sectors}
+          selectionError={selectionError}
+          prominent
+          calendarDate={calendarDate}
+        />
       </Container>
     </main>
   );

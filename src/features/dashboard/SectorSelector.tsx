@@ -8,6 +8,7 @@ type SectorSelectorProps = Readonly<{
   activeSector?: Sector;
   selectionError?: boolean;
   prominent?: boolean;
+  calendarDate?: string;
 }>;
 
 export function SectorSelector({
@@ -15,6 +16,7 @@ export function SectorSelector({
   activeSector,
   selectionError = false,
   prominent = false,
+  calendarDate,
 }: SectorSelectorProps) {
   const content = (
     <Stack gap="md">
@@ -44,7 +46,7 @@ export function SectorSelector({
           <Button
             key={sector.id}
             component="a"
-            href={`/dashboard?sector=${sector.code}`}
+            href={`/dashboard?sector=${sector.code}${calendarDate ? `&date=${calendarDate}` : ""}`}
             variant={activeSector?.id === sector.id ? "filled" : "light"}
             aria-current={activeSector?.id === sector.id ? "page" : undefined}
           >

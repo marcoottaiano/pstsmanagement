@@ -21,6 +21,11 @@
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
+    "@fullcalendar/core": "6.1.20",
+    "@fullcalendar/daygrid": "6.1.20",
+    "@fullcalendar/interaction": "6.1.20",
+    "@fullcalendar/react": "6.1.20",
+    "@fullcalendar/timegrid": "6.1.20",
     "@mantine/core": "9.5.1",
     "@mantine/dates": "9.5.1",
     "@mantine/form": "9.5.1",

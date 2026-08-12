@@ -37,9 +37,88 @@ body {
   backdrop-filter: blur(10px);
 }
 
-.dashboard-calendar-placeholder {
-  min-height: 30rem;
+.dashboard-calendar {
   grid-column: span 2;
+  min-width: 0;
+}
+
+.scheduled-work-calendar-container {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.scheduled-work-calendar-container .fc {
+  min-width: 42rem;
+  color: var(--mantine-color-dark-8);
+  --fc-border-color: var(--mantine-color-gray-3);
+  --fc-button-bg-color: var(--mantine-primary-color-filled);
+  --fc-button-border-color: var(--mantine-primary-color-filled);
+  --fc-button-hover-bg-color: var(--mantine-primary-color-filled-hover);
+  --fc-button-hover-border-color: var(--mantine-primary-color-filled-hover);
+  --fc-button-active-bg-color: var(--mantine-color-clubBlue-7);
+  --fc-button-active-border-color: var(--mantine-color-clubBlue-7);
+  --fc-today-bg-color: var(--mantine-color-blue-0);
+  --fc-page-bg-color: var(--mantine-color-white);
+}
+
+.scheduled-work-calendar-container .fc .fc-toolbar-title {
+  font-size: var(--mantine-font-size-xl);
+  text-transform: capitalize;
+}
+
+.scheduled-work-calendar-container .fc .fc-button {
+  border-radius: var(--mantine-radius-sm);
+  box-shadow: none;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.scheduled-work-calendar-container .fc .fc-daygrid-day-frame {
+  min-height: 6.5rem;
+}
+
+.scheduled-work-calendar-container .fc .fc-daygrid-day-number {
+  color: inherit;
+  text-decoration: none;
+}
+
+.scheduled-work-calendar-container .fc .fc-event {
+  border-radius: var(--mantine-radius-xs);
+  cursor: pointer;
+  padding: 0.125rem 0.25rem;
+}
+
+.scheduled-work-event-content {
+  display: grid;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.scheduled-work-event-time,
+.scheduled-work-event-title,
+.scheduled-work-event-group {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduled-work-event-time {
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.scheduled-work-event-title {
+  font-weight: 650;
+}
+
+.scheduled-work-event-group {
+  opacity: 0.86;
+  font-size: 0.68rem;
+}
+
+.scheduled-work-empty-groups {
+  padding: var(--mantine-spacing-sm);
+  border: 1px dashed var(--mantine-color-gray-4);
+  border-radius: var(--mantine-radius-sm);
 }
 
 .dashboard-sidebar {
@@ -89,9 +168,16 @@ body {
 }
 
 @media (width < 75em) {
-  .dashboard-calendar-placeholder {
-    min-height: 22rem;
+  .dashboard-calendar {
     grid-column: auto;
+  }
+}
+
+@media (width < 48em) {
+  .scheduled-work-calendar-container .fc .fc-toolbar {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: var(--mantine-spacing-sm);
   }
 }
 
