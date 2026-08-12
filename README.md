@@ -37,7 +37,7 @@ Esegui l'intera pipeline locale con:
 npm run validate
 ```
 
-Il comando verifica formatter, lint, TypeScript, test e build di produzione.
+Il comando verifica formatter, lint, TypeScript e build di produzione. Il progetto non include librerie o infrastruttura di testing automatizzato.
 
 ## Database
 
