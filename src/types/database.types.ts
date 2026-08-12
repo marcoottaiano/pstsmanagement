@@ -361,11 +361,19 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      reorder_group_node: {
+        Args: { move_direction: string; selected_node_id: string };
+        Returns: undefined;
+      };
       resolve_group_scope: {
         Args: { selected_node_id: string };
         Returns: {
           group_id: string;
         }[];
+      };
+      set_group_subtree_archive_state: {
+        Args: { archived: boolean; selected_node_id: string };
+        Returns: undefined;
       };
     };
     Enums: {

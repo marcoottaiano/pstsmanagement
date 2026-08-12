@@ -14,8 +14,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
     console.error("Dashboard load failed.", error);
   }, [error]);
 
-  const developmentMessage =
-    process.env.NODE_ENV === "development" ? error.message : undefined;
+  const developmentMessage = process.env.NODE_ENV === "development" ? error.message : undefined;
 
   return (
     <main className="dashboard-page">

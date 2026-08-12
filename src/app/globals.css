@@ -48,6 +48,46 @@ body {
   gap: var(--mantine-spacing-lg);
 }
 
+.group-filter-controls {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-tree,
+.group-tree-children {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-tree-children {
+  margin-left: 1.5rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--mantine-color-gray-3);
+}
+
+.group-tree-row {
+  border-radius: var(--mantine-radius-sm);
+}
+
+.group-tree-row:hover {
+  background: var(--mantine-color-gray-1);
+}
+
+.group-tree-row-selected {
+  background: var(--mantine-color-blue-0);
+}
+
+.dashboard-filter-notice {
+  margin: 0 0 var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-orange-9);
+  background: var(--mantine-color-orange-0);
+}
+
 @media (width < 75em) {
   .dashboard-calendar-placeholder {
     min-height: 22rem;
