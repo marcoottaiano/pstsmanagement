@@ -1,22 +1,38 @@
-import { Avatar, Button, Group, Stack, Text, ThemeIcon, Title } from "@mantine/core";
-import { IconCalendarStats, IconLogout } from "@tabler/icons-react";
+import { Avatar, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { IconLogout } from "@tabler/icons-react";
+import Image from "next/image";
 
 import { APP_CONFIG } from "@/config/app.config";
 import { logoutAction } from "@/features/auth/auth.actions";
-import type { AuthenticatedIdentity } from "@/features/auth/auth.types";
+import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
+
+import { SectorSelector } from "./SectorSelector";
 
 type DashboardHeaderProps = Readonly<{
   identity: AuthenticatedIdentity;
+  sectors?: readonly Sector[];
+  activeSector?: Sector;
+  calendarDate?: string;
 }>;
 
-export function DashboardHeader({ identity }: DashboardHeaderProps) {
+export function DashboardHeader({
+  identity,
+  sectors = [],
+  activeSector,
+  calendarDate,
+}: DashboardHeaderProps) {
   return (
     <header className="dashboard-header">
-      <Group justify="space-between" wrap="nowrap" gap="md">
+      <div className="dashboard-header-layout">
         <Group gap="sm" wrap="nowrap">
-          <ThemeIcon size={42} radius="md" variant="light" aria-hidden="true">
-            <IconCalendarStats size={24} />
-          </ThemeIcon>
+          <Image
+            src="/psts-logo.png"
+            alt="Logo PSTS"
+            width={48}
+            height={48}
+            className="dashboard-logo"
+            priority
+          />
           <Title order={1} size="h3" visibleFrom="xs">
             {APP_CONFIG.name}
           </Title>
@@ -24,6 +40,16 @@ export function DashboardHeader({ identity }: DashboardHeaderProps) {
             PSTS
           </Text>
         </Group>
+
+        {sectors.length > 1 ? (
+          <div className="dashboard-header-sector">
+            <SectorSelector
+              sectors={sectors}
+              activeSector={activeSector}
+              calendarDate={calendarDate}
+            />
+          </div>
+        ) : null}
 
         <Group gap="sm" wrap="nowrap">
           <Avatar color="clubBlue" radius="xl" aria-label={`Profilo di ${identity.displayName}`}>
@@ -53,7 +79,7 @@ export function DashboardHeader({ identity }: DashboardHeaderProps) {
             </Button>
           </form>
         </Group>
-      </Group>
+      </div>
     </header>
   );
 }

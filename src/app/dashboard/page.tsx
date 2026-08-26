@@ -8,7 +8,6 @@ import type { Sector } from "@/features/auth/auth.types";
 import { AccessNotConfigured } from "@/features/dashboard/AccessNotConfigured";
 import { DashboardHeader } from "@/features/dashboard/DashboardHeader";
 import { DashboardShell } from "@/features/dashboard/DashboardShell";
-import { SectorSelector } from "@/features/dashboard/SectorSelector";
 import { getGroupNodes, resolveGroupFilter } from "@/features/groups/groups.data";
 import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
 import {
@@ -99,7 +98,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     return (
       <main className="dashboard-page">
         <DashboardHeader identity={context.identity} />
-        <Container size="xl" py={{ base: "xl", sm: 48 }}>
+        <Container className="dashboard-content" py={{ base: "xl", sm: 48 }}>
           <AccessNotConfigured profileConfigured={context.profileConfigured} />
         </Container>
       </main>
@@ -136,16 +135,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     );
 
     return (
-      <main className="dashboard-page">
+      <main className={`dashboard-page dashboard-page-${onlySector.code}`}>
         <DashboardHeader identity={context.identity} />
-        <Container size="xl" py="lg">
+        <Container className="dashboard-content" py="lg">
           {groupNotice ? (
             <p className="dashboard-filter-notice" role="status">
               Il gruppo richiesto non è disponibile per questo settore. Il filtro è stato rimosso.
             </p>
           ) : null}
           <DashboardShell
-            sectors={context.sectors}
             activeSector={onlySector}
             groupFilter={groupFilter}
             managementNodes={managementNodes}
@@ -187,16 +185,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     );
 
     return (
-      <main className="dashboard-page">
-        <DashboardHeader identity={context.identity} />
-        <Container size="xl" py="lg">
+      <main className={`dashboard-page dashboard-page-${activeSector.code}`}>
+        <DashboardHeader
+          identity={context.identity}
+          sectors={context.sectors}
+          activeSector={activeSector}
+          calendarDate={calendarDate}
+        />
+        <Container className="dashboard-content" py="lg">
           {groupNotice ? (
             <p className="dashboard-filter-notice" role="status">
               Il gruppo richiesto non è disponibile per questo settore. Il filtro è stato rimosso.
             </p>
           ) : null}
           <DashboardShell
-            sectors={context.sectors}
             activeSector={activeSector}
             groupFilter={groupFilter}
             managementNodes={managementNodes}
@@ -214,15 +216,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <main className="dashboard-page">
-      <DashboardHeader identity={context.identity} />
-      <Container size="xl" py="lg">
-        <SectorSelector
-          sectors={context.sectors}
-          selectionError={selectionError}
-          prominent
-          calendarDate={calendarDate}
-        />
-      </Container>
+      <DashboardHeader
+        identity={context.identity}
+        sectors={context.sectors}
+        calendarDate={calendarDate}
+      />
+      {selectionError ? (
+        <Container className="dashboard-content" py="lg">
+          <p className="dashboard-filter-notice" role="alert">
+            Il settore richiesto non è disponibile per il tuo account. Selezionane uno autorizzato.
+          </p>
+        </Container>
+      ) : null}
     </main>
   );
 }

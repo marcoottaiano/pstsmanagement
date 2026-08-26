@@ -6,7 +6,7 @@ export default function DashboardLoading() {
       <div className="dashboard-header">
         <Skeleton height={42} width={220} />
       </div>
-      <Container size="xl" py="lg">
+      <Container className="dashboard-content" py="lg">
         <Stack gap="lg">
           <Paper withBorder p="md">
             <Skeleton height={36} width={320} maw="100%" />

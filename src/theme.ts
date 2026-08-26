@@ -33,6 +33,18 @@ export const theme = createTheme({
         radius: "lg",
       },
     },
+    Modal: {
+      defaultProps: {
+        radius: "lg",
+      },
+      styles: {
+        title: {
+          fontSize: "var(--mantine-h3-font-size)",
+          fontWeight: 650,
+          lineHeight: "var(--mantine-h3-line-height)",
+        },
+      },
+    },
   },
   cursorType: "pointer",
   focusRing: "auto",

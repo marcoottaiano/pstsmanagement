@@ -6,6 +6,7 @@ import {
   Group,
   Modal,
   Select,
+  SimpleGrid,
   Stack,
   Switch,
   Textarea,
@@ -223,6 +224,13 @@ export function ScheduledWorkFormModal({
 
   const allDay = form.values.allDay;
   const hasEnd = form.values.hasEnd;
+  const isFormComplete =
+    form.values.title.trim().length > 0 &&
+    form.values.groupId.length > 0 &&
+    form.values.startDate.length > 0 &&
+    (allDay || form.values.startTime.length > 0) &&
+    (!hasEnd ||
+      (form.values.endDate.length > 0 && (allDay || form.values.endTime.length > 0)));
 
   return (
     <>
@@ -230,20 +238,31 @@ export function ScheduledWorkFormModal({
         opened={opened}
         onClose={onClose}
         title={item ? "Modifica lavoro programmato" : "Nuovo lavoro programmato"}
-        size="lg"
+        size="min(68rem, calc(100vw - 2rem))"
         closeOnClickOutside={!isSubmitting}
         closeOnEscape={!isSubmitting}
       >
         <form onSubmit={form.onSubmit(handleSubmit)} noValidate>
           <Stack gap="md">
-            <TextInput
-              label="Titolo"
-              placeholder="Titolo del lavoro"
-              required
-              maxLength={200}
-              key={form.key("title")}
-              {...form.getInputProps("title")}
-            />
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+              <TextInput
+                label="Titolo"
+                placeholder="Titolo del lavoro"
+                required
+                maxLength={200}
+                key={form.key("title")}
+                {...form.getInputProps("title")}
+              />
+              <Select
+                label="Gruppo"
+                placeholder="Seleziona un gruppo"
+                required
+                searchable
+                data={groups.map((group) => ({ value: group.id, label: group.name }))}
+                key={form.key("groupId")}
+                {...form.getInputProps("groupId")}
+              />
+            </SimpleGrid>
             <Textarea
               label="Descrizione"
               placeholder="Dettagli opzionali"
@@ -253,21 +272,12 @@ export function ScheduledWorkFormModal({
               key={form.key("description")}
               {...form.getInputProps("description")}
             />
-            <Select
-              label="Gruppo"
-              placeholder="Seleziona un gruppo"
-              required
-              searchable
-              data={groups.map((group) => ({ value: group.id, label: group.name }))}
-              key={form.key("groupId")}
-              {...form.getInputProps("groupId")}
-            />
             <Switch
               label="Tutto il giorno"
               key={form.key("allDay")}
               {...form.getInputProps("allDay", { type: "checkbox" })}
             />
-            <Group grow align="start">
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
               <TextInput
                 type="date"
                 label="Data di inizio"
@@ -284,14 +294,14 @@ export function ScheduledWorkFormModal({
                   {...form.getInputProps("startTime")}
                 />
               ) : null}
-            </Group>
+            </SimpleGrid>
             <Checkbox
               label="Imposta una fine"
               key={form.key("hasEnd")}
               {...form.getInputProps("hasEnd", { type: "checkbox" })}
             />
             {hasEnd ? (
-              <Group grow align="start">
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                 <TextInput
                   type="date"
                   label={allDay ? "Data di fine inclusiva" : "Data di fine"}
@@ -309,7 +319,7 @@ export function ScheduledWorkFormModal({
                     {...form.getInputProps("endTime")}
                   />
                 ) : null}
-              </Group>
+              </SimpleGrid>
             ) : null}
             <Group justify={item ? "space-between" : "flex-end"} mt="sm">
               {item ? (
@@ -327,7 +337,7 @@ export function ScheduledWorkFormModal({
                 <Button type="button" variant="default" onClick={onClose} disabled={isSubmitting}>
                   Annulla
                 </Button>
-                <Button type="submit" loading={isSubmitting}>
+                <Button type="submit" loading={isSubmitting} disabled={!isFormComplete}>
                   {item ? "Salva modifiche" : "Crea lavoro"}
                 </Button>
               </Group>

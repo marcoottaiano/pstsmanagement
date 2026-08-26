@@ -84,7 +84,7 @@ export function ReminderSidebarCard({
     <Paper withBorder p="lg">
       <Stack gap="md">
         <Group justify="space-between" align="center">
-          <Title order={2} size="h4">
+          <Title order={2} size="h3">
             Promemoria
           </Title>
           <Button

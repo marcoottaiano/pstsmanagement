@@ -6,6 +6,7 @@ import {
   Modal,
   MultiSelect,
   Select,
+  SimpleGrid,
   Stack,
   Textarea,
   TextInput,
@@ -204,13 +205,15 @@ export function ReminderFormModal({
     router.refresh();
   }
 
+  const isFormComplete = form.values.title.trim().length > 0;
+
   return (
     <>
       <Modal
         opened={opened}
         onClose={onClose}
         title={item ? "Modifica promemoria" : "Nuovo promemoria"}
-        size="lg"
+        size="min(68rem, calc(100vw - 2rem))"
         closeOnClickOutside={!isSubmitting}
         closeOnEscape={!isSubmitting}
       >
@@ -233,29 +236,32 @@ export function ReminderFormModal({
               key={form.key("description")}
               {...form.getInputProps("description")}
             />
-            <Select
-              label="Gruppo"
-              description="Lascia vuoto per un promemoria personale."
-              placeholder="Personale"
-              clearable
-              searchable
-              data={groups.map((group) => ({ value: group.id, label: group.name }))}
-              key={form.key("groupId")}
-              {...form.getInputProps("groupId")}
-            />
-            <MultiSelect
-              label="Assegnatari"
-              placeholder="Seleziona uno o più utenti"
-              searchable
-              clearable
-              data={assigneeOptions.map((option) => ({
-                value: option.id,
-                label: option.displayName,
-              }))}
-              key={form.key("assigneeIds")}
-              {...form.getInputProps("assigneeIds")}
-            />
-            <Group grow align="start">
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+              <Select
+                label="Gruppo"
+                description="Lascia vuoto per un promemoria personale."
+                placeholder="Personale"
+                clearable
+                searchable
+                data={groups.map((group) => ({ value: group.id, label: group.name }))}
+                key={form.key("groupId")}
+                {...form.getInputProps("groupId")}
+              />
+              <MultiSelect
+                label="Assegnatari"
+                description="Puoi selezionare uno o più utenti."
+                placeholder="Seleziona uno o più utenti"
+                searchable
+                clearable
+                data={assigneeOptions.map((option) => ({
+                  value: option.id,
+                  label: option.displayName,
+                }))}
+                key={form.key("assigneeIds")}
+                {...form.getInputProps("assigneeIds")}
+              />
+            </SimpleGrid>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
               <Select
                 label="Priorità"
                 data={PRIORITY_OPTIONS}
@@ -270,8 +276,6 @@ export function ReminderFormModal({
                 key={form.key("status")}
                 {...form.getInputProps("status")}
               />
-            </Group>
-            <Group grow align="start">
               <TextInput
                 type="date"
                 label="Data di scadenza"
@@ -287,7 +291,7 @@ export function ReminderFormModal({
                 key={form.key("dueTime")}
                 {...form.getInputProps("dueTime")}
               />
-            </Group>
+            </SimpleGrid>
             <Group justify={item ? "space-between" : "flex-end"} mt="sm">
               {item ? (
                 <Button
@@ -304,7 +308,7 @@ export function ReminderFormModal({
                 <Button type="button" variant="default" onClick={onClose} disabled={isSubmitting}>
                   Annulla
                 </Button>
-                <Button type="submit" loading={isSubmitting}>
+                <Button type="submit" loading={isSubmitting} disabled={!isFormComplete}>
                   {item ? "Salva modifiche" : "Crea promemoria"}
                 </Button>
               </Group>

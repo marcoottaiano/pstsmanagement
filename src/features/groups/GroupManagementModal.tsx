@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   Divider,
+  Grid,
   Group,
   Modal,
   Radio,
@@ -198,12 +199,25 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
     void runAction(() => moveGroupNode({ sectorId: sector.id, nodeId: draggedNodeId, parentId }));
   }
 
+  function closeModal(): void {
+    setFeedback(null);
+    setSelectedNodeId(null);
+    setRenameValue("");
+    setMoveParentId(null);
+    close();
+  }
+
   return (
     <>
       <Button leftSection={<IconSettings size={16} />} onClick={open}>
         Gestisci gruppi
       </Button>
-      <Modal opened={opened} onClose={close} title={`Gestisci gruppi · ${sector.name}`} size="xl">
+      <Modal
+        opened={opened}
+        onClose={closeModal}
+        title="Gestisci gruppi"
+        size="min(80rem, calc(100vw - 2rem))"
+      >
         <Stack gap="lg">
           <Text c="dimmed" size="sm">
             Trascina un nodo sopra il nuovo genitore per spostarlo. Le frecce restano disponibili
@@ -270,48 +284,60 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
           <Divider />
           <Stack gap="sm">
             <Text fw={600}>Nuovo nodo</Text>
-            <TextInput
-              label="Nome"
-              value={newNodeName}
-              onChange={(event) => setNewNodeName(event.currentTarget.value)}
-            />
-            <Radio.Group label="Tipo" value={newNodeType} onChange={updateNewNodeType}>
-              <Group mt="xs">
-                <Radio value="CATEGORY" label="Categoria" />
-                <Radio value="GROUP" label="Gruppo" />
-              </Group>
-            </Radio.Group>
-            <Select
-              label="Genitore"
-              data={[{ value: ROOT_VALUE, label: "Radice del settore" }].concat(
-                activeNodes.map((node) => ({ value: node.id, label: getNodeLabel(node) })),
-              )}
-              value={newParentId ?? ROOT_VALUE}
-              onChange={(value) =>
-                setNewParentId(value === ROOT_VALUE || value === null ? null : value)
-              }
-              searchable
-            />
-            <Button
-              leftSection={<IconPlus size={16} />}
-              loading={pending}
-              onClick={() =>
-                void runAction(async () => {
-                  const result = await createGroupNode({
-                    sectorId: sector.id,
-                    parentId: newParentId,
-                    name: newNodeName,
-                    nodeType: newNodeType,
-                  });
-                  if (!result.error) {
-                    setNewNodeName("");
+            <Grid align="end" gutter="md">
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <TextInput
+                  label="Nome"
+                  required
+                  value={newNodeName}
+                  onChange={(event) => setNewNodeName(event.currentTarget.value)}
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Radio.Group label="Tipo" value={newNodeType} onChange={updateNewNodeType}>
+                  <Group mt="xs" wrap="nowrap">
+                    <Radio value="CATEGORY" label="Categoria" />
+                    <Radio value="GROUP" label="Gruppo" />
+                  </Group>
+                </Radio.Group>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Select
+                  label="Genitore"
+                  data={[{ value: ROOT_VALUE, label: "Radice del settore" }].concat(
+                    activeNodes.map((node) => ({ value: node.id, label: getNodeLabel(node) })),
+                  )}
+                  value={newParentId ?? ROOT_VALUE}
+                  onChange={(value) =>
+                    setNewParentId(value === ROOT_VALUE || value === null ? null : value)
                   }
-                  return result;
-                })
-              }
-            >
-              Crea nodo
-            </Button>
+                  searchable
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 2 }}>
+                <Button
+                  leftSection={<IconPlus size={16} />}
+                  loading={pending}
+                  disabled={newNodeName.trim().length === 0}
+                  onClick={() =>
+                    void runAction(async () => {
+                      const result = await createGroupNode({
+                        sectorId: sector.id,
+                        parentId: newParentId,
+                        name: newNodeName,
+                        nodeType: newNodeType,
+                      });
+                      if (!result.error) {
+                        setNewNodeName("");
+                      }
+                      return result;
+                    })
+                  }
+                >
+                  Crea nodo
+                </Button>
+              </Grid.Col>
+            </Grid>
           </Stack>
 
           {selectedNode ? (

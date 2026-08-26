@@ -8,10 +8,7 @@ import { ReminderSidebarCard } from "@/features/reminders/ReminderSidebarCard";
 import type { Reminder, ReminderPerson } from "@/features/reminders/reminders.types";
 import type { ScheduledWorkCalendarItem } from "@/features/scheduled-work/scheduled-work.types";
 
-import { SectorSelector } from "./SectorSelector";
-
 type DashboardShellProps = Readonly<{
-  sectors: readonly Sector[];
   activeSector: Sector;
   groupFilter: GroupFilterContext;
   managementNodes: readonly GroupNode[];
@@ -24,7 +21,6 @@ type DashboardShellProps = Readonly<{
 }>;
 
 export function DashboardShell({
-  sectors,
   activeSector,
   groupFilter,
   managementNodes,
@@ -40,10 +36,6 @@ export function DashboardShell({
 
   return (
     <Stack gap="lg">
-      <Paper withBorder p="md">
-        <SectorSelector sectors={sectors} activeSector={activeSector} calendarDate={calendarDate} />
-      </Paper>
-
       <GroupFilterBar
         sector={activeSector}
         filter={groupFilter}
@@ -73,7 +65,7 @@ export function DashboardShell({
           />
           {groupFilter.selectedNode ? (
             <Paper withBorder p="lg">
-              <Title order={2} size="h4">
+              <Title order={2} size="h3">
                 Obiettivi
               </Title>
               <Text c="dimmed" size="sm" mt="xs">

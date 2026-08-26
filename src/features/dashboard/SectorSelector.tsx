@@ -1,67 +1,41 @@
-import { Alert, Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
+"use client";
+
+import { Select } from "@mantine/core";
+import { useRouter } from "next/navigation";
 
 import type { Sector } from "@/features/auth/auth.types";
 
 type SectorSelectorProps = Readonly<{
   sectors: readonly Sector[];
   activeSector?: Sector;
-  selectionError?: boolean;
-  prominent?: boolean;
   calendarDate?: string;
 }>;
 
 export function SectorSelector({
   sectors,
   activeSector,
-  selectionError = false,
-  prominent = false,
   calendarDate,
 }: SectorSelectorProps) {
-  const content = (
-    <Stack gap="md">
-      {prominent ? (
-        <div>
-          <Title order={2} size="h3">
-            Scegli il settore
-          </Title>
-          <Text c="dimmed" size="sm" mt={4}>
-            Seleziona il settore con cui vuoi lavorare.
-          </Text>
-        </div>
-      ) : (
-        <Text fw={600} size="sm">
-          Settore attivo
-        </Text>
-      )}
+  const router = useRouter();
 
-      {selectionError ? (
-        <Alert color="orange" icon={<IconAlertCircle size={18} aria-hidden="true" />} role="alert">
-          Il settore richiesto non è disponibile per il tuo account. Selezionane uno autorizzato.
-        </Alert>
-      ) : null}
+  function selectSector(sectorCode: string | null): void {
+    if (!sectorCode) {
+      return;
+    }
 
-      <Group gap="sm">
-        {sectors.map((sector) => (
-          <Button
-            key={sector.id}
-            component="a"
-            href={`/dashboard?sector=${sector.code}${calendarDate ? `&date=${calendarDate}` : ""}`}
-            variant={activeSector?.id === sector.id ? "filled" : "light"}
-            aria-current={activeSector?.id === sector.id ? "page" : undefined}
-          >
-            {sector.name}
-          </Button>
-        ))}
-      </Group>
-    </Stack>
-  );
+    router.push(`/dashboard?sector=${sectorCode}${calendarDate ? `&date=${calendarDate}` : ""}`);
+  }
 
-  return prominent ? (
-    <Paper withBorder shadow="xs" p={{ base: "lg", sm: "xl" }} maw={620} mx="auto">
-      {content}
-    </Paper>
-  ) : (
-    content
+  return (
+    <Select
+      aria-label="Seleziona il settore attivo"
+      placeholder="Seleziona settore"
+      data={sectors.map((sector) => ({ value: sector.code, label: sector.name }))}
+      value={activeSector?.code ?? null}
+      onChange={selectSector}
+      allowDeselect={false}
+      size="sm"
+      w={200}
+    />
   );
 }
