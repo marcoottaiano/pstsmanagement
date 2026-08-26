@@ -1,0 +1,218 @@
+"use client";
+
+import {
+  ActionIcon,
+  Avatar,
+  Badge,
+  Button,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+  UnstyledButton,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconPlus, IconRotateClockwise } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import type { GroupNode } from "@/features/groups/groups.types";
+
+import { updateReminderStatus } from "./reminders.actions";
+import { formatReminderDue } from "./reminders.dates";
+import type { Reminder, ReminderPerson, ReminderPriority } from "./reminders.types";
+import { getReminderSections } from "./reminders.utils";
+import { ReminderFormModal } from "./ReminderFormModal";
+
+type ReminderSidebarCardProps = Readonly<{
+  sectorId: string;
+  reminders: readonly Reminder[];
+  groups: readonly GroupNode[];
+  assigneeOptions: readonly ReminderPerson[];
+  currentUserId: string;
+  preferredGroupId: string | null;
+}>;
+
+type ModalState = Readonly<{
+  item: Reminder | null;
+  key: string;
+}>;
+
+const PRIORITY_PRESENTATION: Record<
+  ReminderPriority,
+  Readonly<{ label: string; color: string }>
+> = {
+  HIGH: { label: "Alta", color: "red" },
+  NORMAL: { label: "Normale", color: "orange" },
+  LOW: { label: "Bassa", color: "teal" },
+};
+
+export function ReminderSidebarCard({
+  sectorId,
+  reminders,
+  groups,
+  assigneeOptions,
+  currentUserId,
+  preferredGroupId,
+}: ReminderSidebarCardProps) {
+  const router = useRouter();
+  const [modalState, setModalState] = useState<ModalState | null>(null);
+  const [pendingReminderId, setPendingReminderId] = useState<string | null>(null);
+  const sections = getReminderSections(reminders, currentUserId);
+
+  async function toggleStatus(reminder: Reminder): Promise<void> {
+    setPendingReminderId(reminder.id);
+    const result = await updateReminderStatus({
+      id: reminder.id,
+      sectorId,
+      status: reminder.status === "OPEN" ? "COMPLETED" : "OPEN",
+    });
+    setPendingReminderId(null);
+
+    if (result.error) {
+      notifications.show({ color: "red", title: "Modifica non salvata", message: result.error });
+      return;
+    }
+
+    notifications.show({ color: "green", message: result.success });
+    router.refresh();
+  }
+
+  return (
+    <Paper withBorder p="lg">
+      <Stack gap="md">
+        <Group justify="space-between" align="center">
+          <Title order={2} size="h4">
+            Promemoria
+          </Title>
+          <Button
+            size="xs"
+            leftSection={<IconPlus size={15} aria-hidden="true" />}
+            onClick={() => setModalState({ item: null, key: `create-${Date.now()}` })}
+          >
+            Nuovo
+          </Button>
+        </Group>
+
+        {sections.length === 0 ? (
+          <Text c="dimmed" size="sm">
+            Nessun promemoria visibile in questa vista.
+          </Text>
+        ) : (
+          sections.map((section) => (
+            <section key={section.key} aria-labelledby={`reminder-section-${section.key}`}>
+              <Group justify="space-between" mb="xs">
+                <Text id={`reminder-section-${section.key}`} fw={650} size="sm">
+                  {section.label}
+                </Text>
+                <Badge variant="light" color="gray" size="sm">
+                  {section.reminders.length}
+                </Badge>
+              </Group>
+              <Stack gap="xs">
+                {section.reminders.map((reminder) => {
+                  const priority = PRIORITY_PRESENTATION[reminder.priority];
+                  const completed = reminder.status === "COMPLETED";
+                  const assignedToCurrentUser = reminder.assignees.some(
+                    (assignee) => assignee.id === currentUserId,
+                  );
+
+                  return (
+                    <Paper key={reminder.id} withBorder p="sm" className="reminder-list-item">
+                      <Group align="flex-start" wrap="nowrap" gap="xs">
+                        <UnstyledButton
+                          className="reminder-list-item-main"
+                          onClick={() =>
+                            setModalState({ item: reminder, key: `edit-${reminder.id}` })
+                          }
+                          aria-label={`Modifica promemoria ${reminder.title}`}
+                        >
+                          <Stack gap={5}>
+                            <Group gap={6} wrap="wrap">
+                              <Text fw={650} size="sm" td={completed ? "line-through" : undefined}>
+                                {reminder.title}
+                              </Text>
+                              <Badge color={priority.color} variant="light" size="xs">
+                                {priority.label}
+                              </Badge>
+                              {assignedToCurrentUser ? (
+                                <Badge color="blue" variant="outline" size="xs">
+                                  Assegnato a te
+                                </Badge>
+                              ) : null}
+                            </Group>
+                            <Text c="dimmed" size="xs">
+                              {reminder.groupName ?? "Personale"}
+                              {reminder.dueAt
+                                ? ` · ${formatReminderDue(reminder.dueAt, reminder.dueAllDay)}`
+                                : " · Nessuna scadenza"}
+                            </Text>
+                            {reminder.assignees.length > 0 ? (
+                              <Avatar.Group>
+                                {reminder.assignees.slice(0, 4).map((assignee) => (
+                                  <Tooltip key={assignee.id} label={assignee.displayName}>
+                                    <Avatar
+                                      size="xs"
+                                      color="clubBlue"
+                                      aria-label={assignee.displayName}
+                                    >
+                                      {assignee.initials}
+                                    </Avatar>
+                                  </Tooltip>
+                                ))}
+                                {reminder.assignees.length > 4 ? (
+                                  <Avatar size="xs">+{reminder.assignees.length - 4}</Avatar>
+                                ) : null}
+                              </Avatar.Group>
+                            ) : (
+                              <Text c="dimmed" size="xs">
+                                Nessun assegnatario
+                              </Text>
+                            )}
+                          </Stack>
+                        </UnstyledButton>
+                        <Tooltip label={completed ? "Riapri" : "Completa"}>
+                          <ActionIcon
+                            variant={completed ? "light" : "filled"}
+                            color={completed ? "gray" : "teal"}
+                            loading={pendingReminderId === reminder.id}
+                            onClick={() => void toggleStatus(reminder)}
+                            aria-label={
+                              completed ? `Riapri ${reminder.title}` : `Completa ${reminder.title}`
+                            }
+                          >
+                            {completed ? (
+                              <IconRotateClockwise size={16} aria-hidden="true" />
+                            ) : (
+                              <IconCheck size={16} aria-hidden="true" />
+                            )}
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            </section>
+          ))
+        )}
+      </Stack>
+
+      {modalState ? (
+        <ReminderFormModal
+          key={modalState.key}
+          opened
+          sectorId={sectorId}
+          groups={groups}
+          assigneeOptions={assigneeOptions}
+          currentUserId={currentUserId}
+          preferredGroupId={preferredGroupId}
+          item={modalState.item}
+          onClose={() => setModalState(null)}
+        />
+      ) : null}
+    </Paper>
+  );
+}

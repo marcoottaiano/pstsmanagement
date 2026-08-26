@@ -15,14 +15,17 @@ export type UpdateScheduledWorkInput = z.infer<typeof updateScheduledWorkSchema>
 export type DeleteScheduledWorkInput = z.infer<typeof deleteScheduledWorkSchema>;
 export type UpdateScheduledWorkDatesInput = z.infer<typeof updateScheduledWorkDatesSchema>;
 
-export type CalendarItem = ScheduledWork &
+export type ScheduledWorkCalendarItem = ScheduledWork &
   Readonly<{
+    itemType: "scheduledWork";
     groupName: string;
   }>;
 
 export type ScheduledWorkEventInput = EventInput &
   Readonly<{
     extendedProps: {
+      itemId: string;
+      itemType: "scheduledWork";
       sectorId: string;
       groupId: string;
       groupName: string;

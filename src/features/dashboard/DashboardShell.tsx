@@ -1,10 +1,12 @@
 import { Box, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 import type { Sector } from "@/features/auth/auth.types";
+import { DashboardCalendar } from "@/features/calendar/DashboardCalendar";
 import { GroupFilterBar } from "@/features/groups/GroupFilterBar";
 import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
-import { ScheduledWorkCalendar } from "@/features/scheduled-work/ScheduledWorkCalendar";
-import type { CalendarItem } from "@/features/scheduled-work/scheduled-work.types";
+import { ReminderSidebarCard } from "@/features/reminders/ReminderSidebarCard";
+import type { Reminder, ReminderPerson } from "@/features/reminders/reminders.types";
+import type { ScheduledWorkCalendarItem } from "@/features/scheduled-work/scheduled-work.types";
 
 import { SectorSelector } from "./SectorSelector";
 
@@ -14,7 +16,10 @@ type DashboardShellProps = Readonly<{
   groupFilter: GroupFilterContext;
   managementNodes: readonly GroupNode[];
   selectableGroups: readonly GroupNode[];
-  scheduledWork: readonly CalendarItem[];
+  scheduledWork: readonly ScheduledWorkCalendarItem[];
+  reminders: readonly Reminder[];
+  assigneeOptions: readonly ReminderPerson[];
+  currentUserId: string;
   calendarDate: string;
 }>;
 
@@ -25,8 +30,14 @@ export function DashboardShell({
   managementNodes,
   selectableGroups,
   scheduledWork,
+  reminders,
+  assigneeOptions,
+  currentUserId,
   calendarDate,
 }: DashboardShellProps) {
+  const preferredGroupId =
+    groupFilter.selectedNode?.nodeType === "GROUP" ? groupFilter.selectedNode.id : null;
+
   return (
     <Stack gap="lg">
       <Paper withBorder p="md">
@@ -40,25 +51,26 @@ export function DashboardShell({
       />
 
       <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="lg">
-        <ScheduledWorkCalendar
+        <DashboardCalendar
           sector={activeSector}
           calendarDate={calendarDate}
-          items={scheduledWork}
+          scheduledWork={scheduledWork}
+          reminders={reminders}
           groups={selectableGroups}
-          preferredGroupId={
-            groupFilter.selectedNode?.nodeType === "GROUP" ? groupFilter.selectedNode.id : null
-          }
+          assigneeOptions={assigneeOptions}
+          currentUserId={currentUserId}
+          preferredGroupId={preferredGroupId}
         />
 
         <Box className="dashboard-sidebar">
-          <Paper withBorder p="lg">
-            <Title order={2} size="h4">
-              Promemoria
-            </Title>
-            <Text c="dimmed" size="sm" mt="xs">
-              Nessuna funzionalità ancora disponibile.
-            </Text>
-          </Paper>
+          <ReminderSidebarCard
+            sectorId={activeSector.id}
+            reminders={reminders}
+            groups={selectableGroups}
+            assigneeOptions={assigneeOptions}
+            currentUserId={currentUserId}
+            preferredGroupId={preferredGroupId}
+          />
           {groupFilter.selectedNode ? (
             <Paper withBorder p="lg">
               <Title order={2} size="h4">

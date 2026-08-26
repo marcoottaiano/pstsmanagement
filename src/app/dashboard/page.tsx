@@ -11,6 +11,10 @@ import { DashboardShell } from "@/features/dashboard/DashboardShell";
 import { SectorSelector } from "@/features/dashboard/SectorSelector";
 import { getGroupNodes, resolveGroupFilter } from "@/features/groups/groups.data";
 import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
+import {
+  getReminderAssigneeOptions,
+  getVisibleReminders,
+} from "@/features/reminders/reminders.data";
 import { getScheduledWorkForVisibleRange } from "@/features/scheduled-work/scheduled-work.data";
 import {
   getTodayInRome,
@@ -32,7 +36,7 @@ type DashboardPageProps = Readonly<{
   }>;
 }>;
 
-async function getCalendarData(
+async function getDashboardData(
   sector: Sector,
   groupFilter: GroupFilterContext,
   calendarDate: string,
@@ -43,15 +47,28 @@ async function getCalendarData(
       (!groupFilter.selectedNode || groupFilter.scopeGroupIds.includes(node.id)),
   );
   const range = getVisibleMonthRange(calendarDate);
-  const scheduledWork = await getScheduledWorkForVisibleRange(
-    sector.id,
-    selectableGroups.map((group) => group.id),
-    range.startAt,
-    range.endAt,
-    new Map(selectableGroups.map((group) => [group.id, group.name])),
+  const groupNames = new Map(
+    groupFilter.nodes
+      .filter((node) => node.nodeType === "GROUP")
+      .map((group) => [group.id, group.name]),
   );
+  const [scheduledWork, reminders, assigneeOptions] = await Promise.all([
+    getScheduledWorkForVisibleRange(
+      sector.id,
+      selectableGroups.map((group) => group.id),
+      range.startAt,
+      range.endAt,
+      groupNames,
+    ),
+    getVisibleReminders(
+      sector.id,
+      groupFilter.selectedNode ? groupFilter.scopeGroupIds : null,
+      groupNames,
+    ),
+    getReminderAssigneeOptions(sector.id),
+  ]);
 
-  return { selectableGroups, scheduledWork };
+  return { selectableGroups, scheduledWork, reminders, assigneeOptions };
 }
 
 function getReadyDashboardUrl(sectorCode: string, calendarDate: string, groupId?: string): string {
@@ -112,7 +129,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       redirect(getReadyDashboardUrl(onlySector.code, calendarDate, groupFilter.selectedNode?.id));
     }
 
-    const { selectableGroups, scheduledWork } = await getCalendarData(
+    const { selectableGroups, scheduledWork, reminders, assigneeOptions } = await getDashboardData(
       onlySector,
       groupFilter,
       calendarDate,
@@ -134,6 +151,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             managementNodes={managementNodes}
             selectableGroups={selectableGroups}
             scheduledWork={scheduledWork}
+            reminders={reminders}
+            assigneeOptions={assigneeOptions}
+            currentUserId={context.identity.id}
             calendarDate={calendarDate}
           />
         </Container>
@@ -160,7 +180,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       redirect(getReadyDashboardUrl(activeSector.code, calendarDate, groupFilter.selectedNode?.id));
     }
 
-    const { selectableGroups, scheduledWork } = await getCalendarData(
+    const { selectableGroups, scheduledWork, reminders, assigneeOptions } = await getDashboardData(
       activeSector,
       groupFilter,
       calendarDate,
@@ -182,6 +202,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             managementNodes={managementNodes}
             selectableGroups={selectableGroups}
             scheduledWork={scheduledWork}
+            reminders={reminders}
+            assigneeOptions={assigneeOptions}
+            currentUserId={context.identity.id}
             calendarDate={calendarDate}
           />
         </Container>

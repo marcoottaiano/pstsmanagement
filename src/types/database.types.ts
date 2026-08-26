@@ -185,10 +185,11 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string | null;
+          due_all_day: boolean;
           due_at: string | null;
           group_id: string | null;
           id: string;
-          priority: string | null;
+          priority: string;
           sector_id: string;
           status: string;
           title: string;
@@ -198,10 +199,11 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           description?: string | null;
+          due_all_day?: boolean;
           due_at?: string | null;
           group_id?: string | null;
           id?: string;
-          priority?: string | null;
+          priority?: string;
           sector_id: string;
           status?: string;
           title: string;
@@ -211,10 +213,11 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           description?: string | null;
+          due_all_day?: boolean;
           due_at?: string | null;
           group_id?: string | null;
           id?: string;
-          priority?: string | null;
+          priority?: string;
           sector_id?: string;
           status?: string;
           title?: string;
@@ -361,6 +364,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_reminder_with_assignees: {
+        Args: {
+          p_assignee_ids: string[];
+          p_description: string | null;
+          p_due_all_day: boolean;
+          p_due_at: string | null;
+          p_group_id: string | null;
+          p_priority: string;
+          p_sector_id: string;
+          p_status: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
       reorder_group_node: {
         Args: { move_direction: string; selected_node_id: string };
         Returns: undefined;
@@ -374,6 +391,21 @@ export type Database = {
       set_group_subtree_archive_state: {
         Args: { archived: boolean; selected_node_id: string };
         Returns: undefined;
+      };
+      update_reminder_with_assignees: {
+        Args: {
+          p_assignee_ids: string[];
+          p_description: string | null;
+          p_due_all_day: boolean;
+          p_due_at: string | null;
+          p_group_id: string | null;
+          p_priority: string;
+          p_reminder_id: string;
+          p_sector_id: string;
+          p_status: string;
+          p_title: string;
+        };
+        Returns: string;
       };
     };
     Enums: {

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 import { scheduledWorkDatabaseSchema } from "./scheduled-work.schemas";
-import type { CalendarItem, ScheduledWork } from "./scheduled-work.types";
+import type { ScheduledWork, ScheduledWorkCalendarItem } from "./scheduled-work.types";
 import { toCalendarItem } from "./scheduled-work.mapper";
 
 const scheduledWorkColumns =
@@ -24,7 +24,7 @@ export async function getScheduledWorkForVisibleRange(
   rangeStartAt: string,
   rangeEndAt: string,
   groupNames: ReadonlyMap<string, string>,
-): Promise<readonly CalendarItem[]> {
+): Promise<readonly ScheduledWorkCalendarItem[]> {
   if (groupIds.length === 0) {
     return [];
   }

@@ -2,12 +2,11 @@
 
 import {
   Button,
-  Checkbox,
   Group,
   Modal,
+  MultiSelect,
   Select,
   Stack,
-  Switch,
   Textarea,
   TextInput,
 } from "@mantine/core";
@@ -18,35 +17,19 @@ import { useState } from "react";
 
 import type { GroupNode } from "@/features/groups/groups.types";
 
-import {
-  createScheduledWork,
-  deleteScheduledWork,
-  updateScheduledWork,
-} from "./scheduled-work.actions";
-import {
-  inclusiveAllDayEndToIso,
-  romeDateTimeToIso,
-  storedDateTimeToFormParts,
-  storedExclusiveEndToInclusiveDate,
-} from "./scheduled-work.dates";
-import { createScheduledWorkSchema, updateScheduledWorkSchema } from "./scheduled-work.schemas";
-import type { ScheduledWorkCalendarItem } from "./scheduled-work.types";
+import { createReminder, deleteReminder, updateReminder } from "./reminders.actions";
+import { reminderDueToFormParts, reminderDueToIso } from "./reminders.dates";
+import { createReminderSchema, updateReminderSchema } from "./reminders.schemas";
+import type { Reminder, ReminderPerson } from "./reminders.types";
 
-export type ScheduledWorkPreset = Readonly<{
-  allDay: boolean;
-  startDate: string;
-  startTime: string;
-  endDate: string;
-  endTime: string;
-}>;
-
-type ScheduledWorkFormModalProps = Readonly<{
+type ReminderFormModalProps = Readonly<{
   opened: boolean;
   sectorId: string;
   groups: readonly GroupNode[];
+  assigneeOptions: readonly ReminderPerson[];
+  currentUserId: string;
   preferredGroupId: string | null;
-  item: ScheduledWorkCalendarItem | null;
-  preset: ScheduledWorkPreset;
+  item: Reminder | null;
   onClose: () => void;
 }>;
 
@@ -54,56 +37,61 @@ type FormValues = {
   title: string;
   description: string;
   groupId: string;
-  allDay: boolean;
-  startDate: string;
-  startTime: string;
-  hasEnd: boolean;
-  endDate: string;
-  endTime: string;
+  priority: string;
+  status: string;
+  assigneeIds: string[];
+  dueDate: string;
+  dueTime: string;
 };
 
+const PRIORITY_OPTIONS = [
+  { value: "LOW", label: "Bassa" },
+  { value: "NORMAL", label: "Normale" },
+  { value: "HIGH", label: "Alta" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "OPEN", label: "Aperto" },
+  { value: "COMPLETED", label: "Completato" },
+];
+
 function getInitialValues(
-  item: ScheduledWorkCalendarItem | null,
-  preset: ScheduledWorkPreset,
+  item: Reminder | null,
   preferredGroupId: string | null,
+  currentUserId: string,
+  assigneeOptions: readonly ReminderPerson[],
 ): FormValues {
   if (!item) {
     return {
       title: "",
       description: "",
       groupId: preferredGroupId ?? "",
-      allDay: preset.allDay,
-      startDate: preset.startDate,
-      startTime: preset.startTime,
-      hasEnd: true,
-      endDate: preset.endDate,
-      endTime: preset.endTime,
+      priority: "NORMAL",
+      status: "OPEN",
+      assigneeIds: assigneeOptions.some((option) => option.id === currentUserId)
+        ? [currentUserId]
+        : [],
+      dueDate: "",
+      dueTime: "",
     };
   }
 
-  const start = storedDateTimeToFormParts(item.startAt);
-  const end = item.endAt ? storedDateTimeToFormParts(item.endAt) : null;
-
+  const due = item.dueAt ? reminderDueToFormParts(item.dueAt) : null;
   return {
     title: item.title,
     description: item.description ?? "",
-    groupId: item.groupId,
-    allDay: item.allDay,
-    startDate: start.date,
-    startTime: start.time,
-    hasEnd: item.endAt !== null,
-    endDate:
-      item.allDay && item.endAt
-        ? storedExclusiveEndToInclusiveDate(item.endAt)
-        : (end?.date ?? start.date),
-    endTime: end?.time ?? start.time,
+    groupId: item.groupId ?? "",
+    priority: item.priority,
+    status: item.status,
+    assigneeIds: item.assignees.map((assignee) => assignee.id),
+    dueDate: due?.date ?? "",
+    dueTime: item.dueAllDay ? "" : (due?.time ?? ""),
   };
 }
 
 function getFieldErrors(issues: readonly { path: PropertyKey[]; message: string }[]) {
   const fieldMap: Record<string, keyof FormValues> = {
-    startAt: "startDate",
-    endAt: "endDate",
+    dueAt: "dueDate",
   };
 
   return Object.fromEntries(
@@ -114,73 +102,68 @@ function getFieldErrors(issues: readonly { path: PropertyKey[]; message: string 
   );
 }
 
-export function ScheduledWorkFormModal({
+export function ReminderFormModal({
   opened,
   sectorId,
   groups,
+  assigneeOptions,
+  currentUserId,
   preferredGroupId,
   item,
-  preset,
   onClose,
-}: ScheduledWorkFormModalProps) {
+}: ReminderFormModalProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
   const form = useForm<FormValues>({
     mode: "controlled",
-    initialValues: getInitialValues(item, preset, preferredGroupId),
+    initialValues: getInitialValues(item, preferredGroupId, currentUserId, assigneeOptions),
   });
 
   async function handleSubmit(values: FormValues): Promise<void> {
     form.clearErrors();
 
-    if (!values.groupId) {
-      form.setFieldError("groupId", "Seleziona un gruppo.");
-      return;
-    }
-    if (!values.startDate || (!values.allDay && !values.startTime)) {
-      form.setFieldError("startDate", "Inserisci una data di inizio valida.");
-      return;
-    }
-    if (values.hasEnd && (!values.endDate || (!values.allDay && !values.endTime))) {
-      form.setFieldError("endDate", "Inserisci una data di fine valida.");
+    if (values.dueTime && !values.dueDate) {
+      form.setFieldError("dueDate", "Inserisci la data della scadenza.");
       return;
     }
 
-    const startAt = romeDateTimeToIso(values.startDate, values.allDay ? "00:00" : values.startTime);
-    const endAt = values.hasEnd
-      ? values.allDay
-        ? inclusiveAllDayEndToIso(values.endDate)
-        : romeDateTimeToIso(values.endDate, values.endTime)
-      : null;
-
-    if (!startAt || (values.hasEnd && !endAt)) {
-      form.setFieldError("startDate", "La data o l’orario indicato non è valido in Europe/Rome.");
+    const dueAt = values.dueDate ? reminderDueToIso(values.dueDate, values.dueTime) : null;
+    if (values.dueDate && !dueAt) {
+      form.setFieldError("dueDate", "La scadenza non è valida in Europe/Rome.");
       return;
     }
 
     const commonInput = {
       sectorId,
-      groupId: values.groupId,
+      groupId: values.groupId || null,
       title: values.title,
       description: values.description.trim() || null,
-      startAt,
-      endAt,
-      allDay: values.allDay,
+      dueAt,
+      dueAllDay: !values.dueTime,
+      priority: values.priority,
+      status: values.status,
+      assigneeIds: values.assigneeIds,
     };
-    const parsed = item
-      ? updateScheduledWorkSchema.safeParse({ id: item.id, ...commonInput })
-      : createScheduledWorkSchema.safeParse(commonInput);
-
-    if (!parsed.success) {
-      form.setErrors(getFieldErrors(parsed.error.issues));
-      return;
-    }
-
     setIsSubmitting(true);
-    const result = item
-      ? await updateScheduledWork({ id: item.id, ...commonInput })
-      : await createScheduledWork(commonInput);
+    let result;
+    if (item) {
+      const parsed = updateReminderSchema.safeParse({ id: item.id, ...commonInput });
+      if (!parsed.success) {
+        setIsSubmitting(false);
+        form.setErrors(getFieldErrors(parsed.error.issues));
+        return;
+      }
+      result = await updateReminder(parsed.data);
+    } else {
+      const parsed = createReminderSchema.safeParse(commonInput);
+      if (!parsed.success) {
+        setIsSubmitting(false);
+        form.setErrors(getFieldErrors(parsed.error.issues));
+        return;
+      }
+      result = await createReminder(parsed.data);
+    }
     setIsSubmitting(false);
 
     if (result.error) {
@@ -203,7 +186,7 @@ export function ScheduledWorkFormModal({
     }
 
     setIsSubmitting(true);
-    const result = await deleteScheduledWork({ id: item.id, sectorId });
+    const result = await deleteReminder({ id: item.id, sectorId });
     setIsSubmitting(false);
 
     if (result.error) {
@@ -221,15 +204,12 @@ export function ScheduledWorkFormModal({
     router.refresh();
   }
 
-  const allDay = form.values.allDay;
-  const hasEnd = form.values.hasEnd;
-
   return (
     <>
       <Modal
         opened={opened}
         onClose={onClose}
-        title={item ? "Modifica lavoro programmato" : "Nuovo lavoro programmato"}
+        title={item ? "Modifica promemoria" : "Nuovo promemoria"}
         size="lg"
         closeOnClickOutside={!isSubmitting}
         closeOnEscape={!isSubmitting}
@@ -238,7 +218,7 @@ export function ScheduledWorkFormModal({
           <Stack gap="md">
             <TextInput
               label="Titolo"
-              placeholder="Titolo del lavoro"
+              placeholder="Titolo del promemoria"
               required
               maxLength={200}
               key={form.key("title")}
@@ -255,62 +235,59 @@ export function ScheduledWorkFormModal({
             />
             <Select
               label="Gruppo"
-              placeholder="Seleziona un gruppo"
-              required
+              description="Lascia vuoto per un promemoria personale."
+              placeholder="Personale"
+              clearable
               searchable
               data={groups.map((group) => ({ value: group.id, label: group.name }))}
               key={form.key("groupId")}
               {...form.getInputProps("groupId")}
             />
-            <Switch
-              label="Tutto il giorno"
-              key={form.key("allDay")}
-              {...form.getInputProps("allDay", { type: "checkbox" })}
+            <MultiSelect
+              label="Assegnatari"
+              placeholder="Seleziona uno o più utenti"
+              searchable
+              clearable
+              data={assigneeOptions.map((option) => ({
+                value: option.id,
+                label: option.displayName,
+              }))}
+              key={form.key("assigneeIds")}
+              {...form.getInputProps("assigneeIds")}
             />
+            <Group grow align="start">
+              <Select
+                label="Priorità"
+                data={PRIORITY_OPTIONS}
+                allowDeselect={false}
+                key={form.key("priority")}
+                {...form.getInputProps("priority")}
+              />
+              <Select
+                label="Stato"
+                data={STATUS_OPTIONS}
+                allowDeselect={false}
+                key={form.key("status")}
+                {...form.getInputProps("status")}
+              />
+            </Group>
             <Group grow align="start">
               <TextInput
                 type="date"
-                label="Data di inizio"
-                required
-                key={form.key("startDate")}
-                {...form.getInputProps("startDate")}
+                label="Data di scadenza"
+                description="Opzionale"
+                key={form.key("dueDate")}
+                {...form.getInputProps("dueDate")}
               />
-              {!allDay ? (
-                <TextInput
-                  type="time"
-                  label="Ora di inizio"
-                  required
-                  key={form.key("startTime")}
-                  {...form.getInputProps("startTime")}
-                />
-              ) : null}
+              <TextInput
+                type="time"
+                label="Ora"
+                description="Vuota = tutto il giorno"
+                disabled={!form.values.dueDate}
+                key={form.key("dueTime")}
+                {...form.getInputProps("dueTime")}
+              />
             </Group>
-            <Checkbox
-              label="Imposta una fine"
-              key={form.key("hasEnd")}
-              {...form.getInputProps("hasEnd", { type: "checkbox" })}
-            />
-            {hasEnd ? (
-              <Group grow align="start">
-                <TextInput
-                  type="date"
-                  label={allDay ? "Data di fine inclusiva" : "Data di fine"}
-                  description={allDay ? "Il giorno indicato è compreso nel lavoro." : undefined}
-                  required
-                  key={form.key("endDate")}
-                  {...form.getInputProps("endDate")}
-                />
-                {!allDay ? (
-                  <TextInput
-                    type="time"
-                    label="Ora di fine"
-                    required
-                    key={form.key("endTime")}
-                    {...form.getInputProps("endTime")}
-                  />
-                ) : null}
-              </Group>
-            ) : null}
             <Group justify={item ? "space-between" : "flex-end"} mt="sm">
               {item ? (
                 <Button
@@ -328,7 +305,7 @@ export function ScheduledWorkFormModal({
                   Annulla
                 </Button>
                 <Button type="submit" loading={isSubmitting}>
-                  {item ? "Salva modifiche" : "Crea lavoro"}
+                  {item ? "Salva modifiche" : "Crea promemoria"}
                 </Button>
               </Group>
             </Group>

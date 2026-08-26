@@ -87,32 +87,45 @@ body {
   padding: 0.125rem 0.25rem;
 }
 
-.scheduled-work-event-content {
+.calendar-event-content {
   display: grid;
   min-width: 0;
   line-height: 1.2;
 }
 
-.scheduled-work-event-time,
-.scheduled-work-event-title,
-.scheduled-work-event-group {
+.calendar-event-kind,
+.calendar-event-time,
+.calendar-event-title,
+.calendar-event-group {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.scheduled-work-event-time {
+.calendar-event-kind {
+  opacity: 0.82;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.calendar-event-time {
   font-size: 0.68rem;
   font-weight: 600;
 }
 
-.scheduled-work-event-title {
+.calendar-event-title {
   font-weight: 650;
 }
 
-.scheduled-work-event-group {
+.calendar-event-group {
   opacity: 0.86;
   font-size: 0.68rem;
+}
+
+.reminder-calendar-event-completed .calendar-event-title {
+  text-decoration: line-through;
 }
 
 .scheduled-work-empty-groups {
@@ -125,6 +138,23 @@ body {
   display: grid;
   align-content: start;
   gap: var(--mantine-spacing-lg);
+}
+
+.reminder-list-item {
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.reminder-list-item:hover {
+  border-color: var(--mantine-color-blue-3);
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.reminder-list-item-main {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 
 .group-filter-controls {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { EventClickArg, EventContentArg, EventDropArg, DatesSetArg } from "@fullcalendar/core";
+import type { DatesSetArg, EventClickArg, EventContentArg, EventDropArg } from "@fullcalendar/core";
 import itLocale from "@fullcalendar/core/locales/it";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, {
@@ -16,26 +16,51 @@ import { useState } from "react";
 
 import type { Sector } from "@/features/auth/auth.types";
 import type { GroupNode } from "@/features/groups/groups.types";
+import { updateReminderDue } from "@/features/reminders/reminders.actions";
+import { reminderDueToIso } from "@/features/reminders/reminders.dates";
+import { toReminderCalendarItem, toReminderEvent } from "@/features/reminders/reminders.mapper";
+import type { Reminder, ReminderPerson } from "@/features/reminders/reminders.types";
+import { ReminderFormModal } from "@/features/reminders/ReminderFormModal";
+import { updateScheduledWorkDates } from "@/features/scheduled-work/scheduled-work.actions";
+import {
+  romeDateTimeToIso,
+  roundCurrentRomeTime,
+} from "@/features/scheduled-work/scheduled-work.dates";
+import { toScheduledWorkEvent } from "@/features/scheduled-work/scheduled-work.mapper";
+import type {
+  ScheduledWorkCalendarItem,
+  UpdateScheduledWorkDatesInput,
+} from "@/features/scheduled-work/scheduled-work.types";
+import {
+  ScheduledWorkFormModal,
+  type ScheduledWorkPreset,
+} from "@/features/scheduled-work/ScheduledWorkFormModal";
 
-import { updateScheduledWorkDates } from "./scheduled-work.actions";
-import { romeDateTimeToIso, roundCurrentRomeTime } from "./scheduled-work.dates";
-import { toFullCalendarEvent } from "./scheduled-work.mapper";
-import type { CalendarItem, UpdateScheduledWorkDatesInput } from "./scheduled-work.types";
-import { ScheduledWorkFormModal, type ScheduledWorkPreset } from "./ScheduledWorkFormModal";
+import type { CalendarItem } from "./calendar.types";
 
-type ScheduledWorkCalendarProps = Readonly<{
+type DashboardCalendarProps = Readonly<{
   sector: Sector;
   calendarDate: string;
-  items: readonly CalendarItem[];
+  scheduledWork: readonly ScheduledWorkCalendarItem[];
+  reminders: readonly Reminder[];
   groups: readonly GroupNode[];
+  assigneeOptions: readonly ReminderPerson[];
+  currentUserId: string;
   preferredGroupId: string | null;
 }>;
 
-type ModalState = Readonly<{
-  item: CalendarItem | null;
-  preset: ScheduledWorkPreset;
-  key: string;
-}>;
+type ModalState =
+  | Readonly<{
+      type: "scheduledWork";
+      item: ScheduledWorkCalendarItem | null;
+      preset: ScheduledWorkPreset;
+      key: string;
+    }>
+  | Readonly<{
+      type: "reminder";
+      item: Reminder;
+      key: string;
+    }>;
 
 function getDefaultPreset(): ScheduledWorkPreset {
   const current = roundCurrentRomeTime();
@@ -58,7 +83,9 @@ function getCalendarMonthDate(date: Date): string {
   return `${year}-${month}-01`;
 }
 
-function getEventDateInput(event: EventDropArg["event"]): UpdateScheduledWorkDatesInput | null {
+function getScheduledWorkDateInput(
+  event: EventDropArg["event"],
+): UpdateScheduledWorkDatesInput | null {
   const startValue = event.startStr.slice(0, 16);
   const endValue = event.endStr.slice(0, 16);
   const startAt = event.allDay
@@ -75,7 +102,7 @@ function getEventDateInput(event: EventDropArg["event"]): UpdateScheduledWorkDat
   }
 
   return {
-    id: event.id,
+    id: String(event.extendedProps.itemId),
     sectorId: String(event.extendedProps.sectorId),
     startAt,
     endAt,
@@ -83,35 +110,83 @@ function getEventDateInput(event: EventDropArg["event"]): UpdateScheduledWorkDat
   };
 }
 
+function getReminderDueInput(event: EventDropArg["event"]) {
+  const startValue = event.startStr.slice(0, 16);
+  const dueAt = event.allDay
+    ? reminderDueToIso(startValue.slice(0, 10), "")
+    : reminderDueToIso(startValue.slice(0, 10), startValue.slice(11, 16));
+
+  return dueAt
+    ? {
+        id: String(event.extendedProps.itemId),
+        sectorId: String(event.extendedProps.sectorId),
+        dueAt,
+        dueAllDay: event.allDay,
+      }
+    : null;
+}
+
+function toFullCalendarEvent(item: CalendarItem) {
+  return item.itemType === "scheduledWork" ? toScheduledWorkEvent(item) : toReminderEvent(item);
+}
+
 function EventContent({ event, timeText }: EventContentArg) {
+  const reminder = event.extendedProps.itemType === "reminder";
   return (
-    <span className="scheduled-work-event-content">
-      {timeText ? <span className="scheduled-work-event-time">{timeText}</span> : null}
-      <span className="scheduled-work-event-title">{event.title}</span>
-      <span className="scheduled-work-event-group">{String(event.extendedProps.groupName)}</span>
+    <span className="calendar-event-content">
+      <span className="calendar-event-kind">{reminder ? "Promemoria" : "Lavoro"}</span>
+      {timeText ? <span className="calendar-event-time">{timeText}</span> : null}
+      <span className="calendar-event-title">{event.title}</span>
+      <span className="calendar-event-group">{String(event.extendedProps.groupName)}</span>
     </span>
   );
 }
 
-export function ScheduledWorkCalendar({
+export function DashboardCalendar({
   sector,
   calendarDate,
-  items,
+  scheduledWork,
+  reminders,
   groups,
+  assigneeOptions,
+  currentUserId,
   preferredGroupId,
-}: ScheduledWorkCalendarProps) {
+}: DashboardCalendarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [modalState, setModalState] = useState<ModalState | null>(null);
+  const calendarItems: CalendarItem[] = [
+    ...scheduledWork,
+    ...reminders.filter((reminder) => reminder.dueAt !== null).map(toReminderCalendarItem),
+  ];
 
-  function openCreateModal(preset: ScheduledWorkPreset): void {
-    setModalState({ item: null, preset, key: `create-${Date.now()}` });
+  function openScheduledWorkModal(preset: ScheduledWorkPreset): void {
+    setModalState({
+      type: "scheduledWork",
+      item: null,
+      preset,
+      key: `create-work-${Date.now()}`,
+    });
   }
 
   function handleEventClick({ event }: EventClickArg): void {
-    const item = items.find((candidate) => candidate.id === event.id);
+    const itemId = String(event.extendedProps.itemId);
+    if (event.extendedProps.itemType === "reminder") {
+      const reminder = reminders.find((candidate) => candidate.id === itemId);
+      if (reminder) {
+        setModalState({ type: "reminder", item: reminder, key: `edit-reminder-${itemId}` });
+      }
+      return;
+    }
+
+    const item = scheduledWork.find((candidate) => candidate.id === itemId);
     if (item) {
-      setModalState({ item, preset: getDefaultPreset(), key: `edit-${item.id}` });
+      setModalState({
+        type: "scheduledWork",
+        item,
+        preset: getDefaultPreset(),
+        key: `edit-work-${itemId}`,
+      });
     }
   }
 
@@ -133,8 +208,11 @@ export function ScheduledWorkCalendar({
     interaction:
       Pick<EventDropArg, "event" | "revert"> | Pick<EventResizeDoneArg, "event" | "revert">,
   ): Promise<void> {
-    const input = getEventDateInput(interaction.event);
-    if (!input) {
+    const reminder = interaction.event.extendedProps.itemType === "reminder";
+    const reminderInput = reminder ? getReminderDueInput(interaction.event) : null;
+    const scheduledWorkInput = reminder ? null : getScheduledWorkDateInput(interaction.event);
+
+    if (!reminderInput && !scheduledWorkInput) {
       interaction.revert();
       notifications.show({
         color: "red",
@@ -144,7 +222,11 @@ export function ScheduledWorkCalendar({
       return;
     }
 
-    const result = await updateScheduledWorkDates(input);
+    const result = reminderInput
+      ? await updateReminderDue(reminderInput)
+      : scheduledWorkInput
+        ? await updateScheduledWorkDates(scheduledWorkInput)
+        : { error: "La nuova data non è valida." };
     if (result.error) {
       interaction.revert();
       notifications.show({ color: "red", title: "Modifica non salvata", message: result.error });
@@ -156,7 +238,7 @@ export function ScheduledWorkCalendar({
   }
 
   function handleDateClick({ dateStr }: DateClickArg): void {
-    openCreateModal(getDateClickPreset(dateStr.slice(0, 10)));
+    openScheduledWorkModal(getDateClickPreset(dateStr.slice(0, 10)));
   }
 
   return (
@@ -165,15 +247,15 @@ export function ScheduledWorkCalendar({
         <Group justify="space-between" align="center">
           <div>
             <Title order={2} size="h3">
-              Lavori programmati
+              Calendario
             </Title>
             <Text c="dimmed" size="sm">
-              Orari visualizzati nel fuso Europe/Rome.
+              Lavori e promemoria · Europe/Rome.
             </Text>
           </div>
           <Button
             leftSection={<IconPlus size={18} aria-hidden="true" />}
-            onClick={() => openCreateModal(getDefaultPreset())}
+            onClick={() => openScheduledWorkModal(getDefaultPreset())}
           >
             Nuovo lavoro
           </Button>
@@ -195,7 +277,7 @@ export function ScheduledWorkCalendar({
             firstDay={1}
             headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
             buttonText={{ today: "Oggi" }}
-            events={items.map(toFullCalendarEvent)}
+            events={calendarItems.map(toFullCalendarEvent)}
             editable
             selectable={false}
             dateClick={handleDateClick}
@@ -212,7 +294,7 @@ export function ScheduledWorkCalendar({
         </div>
       </Stack>
 
-      {modalState ? (
+      {modalState?.type === "scheduledWork" ? (
         <ScheduledWorkFormModal
           key={modalState.key}
           opened
@@ -221,6 +303,20 @@ export function ScheduledWorkCalendar({
           preferredGroupId={preferredGroupId}
           item={modalState.item}
           preset={modalState.preset}
+          onClose={() => setModalState(null)}
+        />
+      ) : null}
+
+      {modalState?.type === "reminder" ? (
+        <ReminderFormModal
+          key={modalState.key}
+          opened
+          sectorId={sector.id}
+          groups={groups}
+          assigneeOptions={assigneeOptions}
+          currentUserId={currentUserId}
+          preferredGroupId={preferredGroupId}
+          item={modalState.item}
           onClose={() => setModalState(null)}
         />
       ) : null}
