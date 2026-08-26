@@ -2,6 +2,7 @@
 
 import {
   ActionIcon,
+  Accordion,
   Avatar,
   Badge,
   Button,
@@ -111,102 +112,121 @@ export function ReminderSidebarCard({
             Nessun promemoria visibile in questa vista.
           </Text>
         ) : (
-          sections.map((section) => (
-            <section key={section.key} aria-labelledby={`reminder-section-${section.key}`}>
-              <Group justify="space-between" mb="xs">
-                <Text id={`reminder-section-${section.key}`} fw={650} size="sm">
-                  {section.label}
-                </Text>
-                <Badge variant="light" color="gray" size="sm">
-                  {section.reminders.length}
-                </Badge>
-              </Group>
-              <Stack gap="xs">
-                {section.reminders.map((reminder) => {
-                  const priority = PRIORITY_PRESENTATION[reminder.priority];
-                  const completed = reminder.status === "COMPLETED";
-                  const assignedToCurrentUser = reminder.assignees.some(
-                    (assignee) => assignee.id === currentUserId,
-                  );
+          <Accordion
+            multiple
+            defaultValue={sections
+              .filter((section) => section.key !== "COMPLETED")
+              .map((section) => section.key)}
+            variant="default"
+            radius="sm"
+          >
+            {sections.map((section) => (
+              <Accordion.Item key={section.key} value={section.key}>
+                <Accordion.Control>
+                  <Group justify="space-between" pr="sm">
+                    <Text fw={650} size="sm">
+                      {section.label}
+                    </Text>
+                    <Badge variant="light" color="gray" size="sm">
+                      {section.reminders.length}
+                    </Badge>
+                  </Group>
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <Stack gap="xs">
+                    {section.reminders.map((reminder) => {
+                      const priority = PRIORITY_PRESENTATION[reminder.priority];
+                      const completed = reminder.status === "COMPLETED";
+                      const assignedToCurrentUser = reminder.assignees.some(
+                        (assignee) => assignee.id === currentUserId,
+                      );
 
-                  return (
-                    <Paper key={reminder.id} withBorder p="sm" className="reminder-list-item">
-                      <Group align="flex-start" wrap="nowrap" gap="xs">
-                        <UnstyledButton
-                          className="reminder-list-item-main"
-                          onClick={() =>
-                            setModalState({ item: reminder, key: `edit-${reminder.id}` })
-                          }
-                          aria-label={`Modifica promemoria ${reminder.title}`}
-                        >
-                          <Stack gap={5}>
-                            <Group gap={6} wrap="wrap">
-                              <Text fw={650} size="sm" td={completed ? "line-through" : undefined}>
-                                {reminder.title}
-                              </Text>
-                              <Badge color={priority.color} variant="light" size="xs">
-                                {priority.label}
-                              </Badge>
-                              {assignedToCurrentUser ? (
-                                <Badge color="blue" variant="outline" size="xs">
-                                  Assegnato a te
-                                </Badge>
-                              ) : null}
-                            </Group>
-                            <Text c="dimmed" size="xs">
-                              {reminder.groupName ?? "Personale"}
-                              {reminder.dueAt
-                                ? ` · ${formatReminderDue(reminder.dueAt, reminder.dueAllDay)}`
-                                : " · Nessuna scadenza"}
-                            </Text>
-                            {reminder.assignees.length > 0 ? (
-                              <Avatar.Group>
-                                {reminder.assignees.slice(0, 4).map((assignee) => (
-                                  <Tooltip key={assignee.id} label={assignee.displayName}>
-                                    <Avatar
-                                      size="xs"
-                                      color="clubBlue"
-                                      aria-label={assignee.displayName}
-                                    >
-                                      {assignee.initials}
-                                    </Avatar>
-                                  </Tooltip>
-                                ))}
-                                {reminder.assignees.length > 4 ? (
-                                  <Avatar size="xs">+{reminder.assignees.length - 4}</Avatar>
-                                ) : null}
-                              </Avatar.Group>
-                            ) : (
-                              <Text c="dimmed" size="xs">
-                                Nessun assegnatario
-                              </Text>
-                            )}
-                          </Stack>
-                        </UnstyledButton>
-                        <Tooltip label={completed ? "Riapri" : "Completa"}>
-                          <ActionIcon
-                            variant={completed ? "light" : "filled"}
-                            color={completed ? "gray" : "teal"}
-                            loading={pendingReminderId === reminder.id}
-                            onClick={(event) => void toggleStatus(reminder, event)}
-                            aria-label={
-                              completed ? `Riapri ${reminder.title}` : `Completa ${reminder.title}`
-                            }
-                          >
-                            {completed ? (
-                              <IconRotateClockwise size={16} aria-hidden="true" />
-                            ) : (
-                              <IconCheck size={16} aria-hidden="true" />
-                            )}
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    </Paper>
-                  );
-                })}
-              </Stack>
-            </section>
-          ))
+                      return (
+                        <Paper key={reminder.id} withBorder p="sm" className="reminder-list-item">
+                          <Group align="flex-start" wrap="nowrap" gap="xs">
+                            <UnstyledButton
+                              className="reminder-list-item-main"
+                              onClick={() =>
+                                setModalState({ item: reminder, key: `edit-${reminder.id}` })
+                              }
+                              aria-label={`Modifica promemoria ${reminder.title}`}
+                            >
+                              <Stack gap={5}>
+                                <Group gap={6} wrap="wrap">
+                                  <Text
+                                    fw={650}
+                                    size="sm"
+                                    td={completed ? "line-through" : undefined}
+                                  >
+                                    {reminder.title}
+                                  </Text>
+                                  <Badge color={priority.color} variant="light" size="xs">
+                                    {priority.label}
+                                  </Badge>
+                                  {assignedToCurrentUser ? (
+                                    <Badge color="blue" variant="outline" size="xs">
+                                      Assegnato a te
+                                    </Badge>
+                                  ) : null}
+                                </Group>
+                                <Text c="dimmed" size="xs">
+                                  {reminder.groupName ?? "Personale"}
+                                  {reminder.dueAt
+                                    ? ` · ${formatReminderDue(reminder.dueAt, reminder.dueAllDay)}`
+                                    : " · Nessuna scadenza"}
+                                </Text>
+                                {reminder.assignees.length > 0 ? (
+                                  <Avatar.Group>
+                                    {reminder.assignees.slice(0, 4).map((assignee) => (
+                                      <Tooltip key={assignee.id} label={assignee.displayName}>
+                                        <Avatar
+                                          size="xs"
+                                          color="clubBlue"
+                                          aria-label={assignee.displayName}
+                                        >
+                                          {assignee.initials}
+                                        </Avatar>
+                                      </Tooltip>
+                                    ))}
+                                    {reminder.assignees.length > 4 ? (
+                                      <Avatar size="xs">+{reminder.assignees.length - 4}</Avatar>
+                                    ) : null}
+                                  </Avatar.Group>
+                                ) : (
+                                  <Text c="dimmed" size="xs">
+                                    Nessun assegnatario
+                                  </Text>
+                                )}
+                              </Stack>
+                            </UnstyledButton>
+                            <Tooltip label={completed ? "Riapri" : "Completa"}>
+                              <ActionIcon
+                                variant={completed ? "light" : "filled"}
+                                color={completed ? "gray" : "teal"}
+                                loading={pendingReminderId === reminder.id}
+                                onClick={(event) => void toggleStatus(reminder, event)}
+                                aria-label={
+                                  completed
+                                    ? `Riapri ${reminder.title}`
+                                    : `Completa ${reminder.title}`
+                                }
+                              >
+                                {completed ? (
+                                  <IconRotateClockwise size={16} aria-hidden="true" />
+                                ) : (
+                                  <IconCheck size={16} aria-hidden="true" />
+                                )}
+                              </ActionIcon>
+                            </Tooltip>
+                          </Group>
+                        </Paper>
+                      );
+                    })}
+                  </Stack>
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
+          </Accordion>
         )}
       </Stack>
 

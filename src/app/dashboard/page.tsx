@@ -165,6 +165,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const activeSector = context.sectors.find((sector) => sector.code === requestedSector);
 
+  if (!sectorWasProvided) {
+    const defaultSector =
+      context.sectors.find((sector) => sector.code === "artistic") ?? context.sectors[0];
+
+    if (!defaultSector) {
+      throw new Error("Nessun settore disponibile per l’utente.");
+    }
+
+    redirect(getReadyDashboardUrl(defaultSector.code, calendarDate, requestedGroup));
+  }
+
   if (sectorWasProvided && !activeSector) {
     redirect(`/dashboard?selection=invalid&date=${calendarDate}`);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, PasswordInput, Stack, TextInput } from "@mantine/core";
+import { Alert, Anchor, Button, PasswordInput, Stack, TextInput } from "@mantine/core";
 import { IconAlertCircle, IconAt, IconLock } from "@tabler/icons-react";
 import { useActionState } from "react";
 
@@ -9,12 +9,21 @@ import type { LoginActionState } from "./auth.types";
 
 const initialLoginState: LoginActionState = {};
 
-export function LoginForm() {
+type LoginFormProps = Readonly<{
+  resetCompleted?: boolean;
+}>;
+
+export function LoginForm({ resetCompleted = false }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(loginAction, initialLoginState);
 
   return (
     <form action={formAction} noValidate>
       <Stack gap="md">
+        {resetCompleted ? (
+          <Alert color="green" role="status" title="Password aggiornata">
+            Ora puoi accedere con la nuova password.
+          </Alert>
+        ) : null}
         {state.formError ? (
           <Alert
             color="red"
@@ -46,6 +55,9 @@ export function LoginForm() {
           disabled={isPending}
           required
         />
+        <Anchor href="/forgot-password" size="sm" ta="right" mt={-4}>
+          Hai dimenticato la password?
+        </Anchor>
         <Button type="submit" loading={isPending} fullWidth mt="xs">
           Accedi
         </Button>

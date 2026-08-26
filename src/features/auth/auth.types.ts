@@ -37,3 +37,13 @@ export type LoginActionState = Readonly<{
   }>;
   formError?: string;
 }>;
+
+export type PasswordResetActionState = Readonly<{
+  fieldErrors?: Readonly<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>;
+  formError?: string;
+  success?: string;
+}>;

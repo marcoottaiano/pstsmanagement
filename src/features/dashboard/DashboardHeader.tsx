@@ -59,11 +59,6 @@ export function DashboardHeader({
             <Text fw={600} size="sm" truncate="end">
               {identity.displayName}
             </Text>
-            {identity.email ? (
-              <Text c="dimmed" size="xs" truncate="end">
-                {identity.email}
-              </Text>
-            ) : null}
           </Stack>
           <form action={logoutAction}>
             <Button

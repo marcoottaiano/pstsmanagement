@@ -1,5 +1,4 @@
-import { Box, Container, Paper, Stack, Text, ThemeIcon, Title } from "@mantine/core";
-import { IconCalendarStats } from "@tabler/icons-react";
+import { Box, Container, Image, Paper, Stack, Text, Title } from "@mantine/core";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -11,21 +10,25 @@ export const metadata: Metadata = {
   title: `Accesso | ${APP_CONFIG.name}`,
 };
 
-export default async function LoginPage() {
+type LoginPageProps = Readonly<{
+  searchParams: Promise<Readonly<{ reset?: string }>>;
+}>;
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
   const context = await getAuthenticatedContext();
 
   if (context) {
     redirect("/dashboard");
   }
 
+  const params = await searchParams;
+
   return (
     <Box component="main" className="auth-page">
       <Container size={440} w="100%">
         <Stack gap="xl">
           <Stack align="center" gap="sm" ta="center">
-            <ThemeIcon size={54} radius="xl" variant="light" aria-hidden="true">
-              <IconCalendarStats size={30} stroke={1.7} />
-            </ThemeIcon>
+            <Image src="/psts-logo.png" alt="Logo PSTS" h={72} w={72} fit="contain" />
             <Stack gap={4}>
               <Title order={1} size="h2">
                 {APP_CONFIG.name}
@@ -44,7 +47,7 @@ export default async function LoginPage() {
                   Inserisci email e password per continuare.
                 </Text>
               </div>
-              <LoginForm />
+              <LoginForm resetCompleted={params.reset === "success"} />
             </Stack>
           </Paper>
         </Stack>

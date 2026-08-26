@@ -13,6 +13,7 @@
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "npm run lint -- --fix",
     "typecheck": "tsc --noEmit",
+    "users:create": "node scripts/create-users.mjs",
     "db:push:dry-run": "supabase db push --linked --dry-run",
     "db:push": "supabase db push --linked",
     "db:types": "supabase gen types --linked --lang typescript --schema public > src/types/database.types.ts && prettier --write src/types/database.types.ts",
