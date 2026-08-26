@@ -70,7 +70,6 @@ export type Database = {
           period_start: string | null;
           sector_id: string;
           status: string;
-          target_date: string | null;
           title: string;
           updated_at: string;
         };
@@ -84,7 +83,6 @@ export type Database = {
           period_start?: string | null;
           sector_id: string;
           status?: string;
-          target_date?: string | null;
           title: string;
           updated_at?: string;
         };
@@ -98,7 +96,6 @@ export type Database = {
           period_start?: string | null;
           sector_id?: string;
           status?: string;
-          target_date?: string | null;
           title?: string;
           updated_at?: string;
         };

@@ -64,6 +64,8 @@ body {
 
 .dashboard-page-artistic,
 .dashboard-page-rhythmic {
+  background-attachment: fixed;
+  background-color: var(--mantine-color-gray-0);
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
@@ -230,6 +232,46 @@ body {
   flex: 1;
   min-width: 0;
   text-align: left;
+}
+
+.objective-list-item {
+  padding: var(--mantine-spacing-xs) 0;
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  transition: background-color 120ms ease;
+}
+
+.objective-list-item:last-child {
+  border-bottom: 0;
+}
+
+.objective-list-item:hover {
+  background: var(--mantine-color-gray-0);
+}
+
+.objective-list-item-main {
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-dark-8);
+  text-align: left;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.objective-list-item-main:hover,
+.objective-list-item-main:focus-visible {
+  background: var(--mantine-color-blue-0);
+  color: var(--mantine-color-blue-9);
+}
+
+
+.app-notification {
+  border: 1px solid var(--mantine-color-gray-4);
+  box-shadow: var(--mantine-shadow-lg);
 }
 
 .group-filter-controls {

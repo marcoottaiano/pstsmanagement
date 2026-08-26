@@ -962,7 +962,6 @@ group_id UUID NOT NULL
 title TEXT NOT NULL
 description TEXT
 status TEXT NOT NULL
-target_date DATE NULL
 period_start DATE NULL
 period_end DATE NULL
 created_by UUID NOT NULL

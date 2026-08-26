@@ -10,6 +10,7 @@ import { DashboardHeader } from "@/features/dashboard/DashboardHeader";
 import { DashboardShell } from "@/features/dashboard/DashboardShell";
 import { getGroupNodes, resolveGroupFilter } from "@/features/groups/groups.data";
 import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
+import { getObjectivesForScope } from "@/features/objectives/objectives.data";
 import {
   getReminderAssigneeOptions,
   getVisibleReminders,
@@ -51,7 +52,7 @@ async function getDashboardData(
       .filter((node) => node.nodeType === "GROUP")
       .map((group) => [group.id, group.name]),
   );
-  const [scheduledWork, reminders, assigneeOptions] = await Promise.all([
+  const [scheduledWork, reminders, assigneeOptions, objectives] = await Promise.all([
     getScheduledWorkForVisibleRange(
       sector.id,
       selectableGroups.map((group) => group.id),
@@ -65,9 +66,14 @@ async function getDashboardData(
       groupNames,
     ),
     getReminderAssigneeOptions(sector.id),
+    getObjectivesForScope(
+      sector.id,
+      groupFilter.selectedNode ? groupFilter.scopeGroupIds : null,
+      groupNames,
+    ),
   ]);
 
-  return { selectableGroups, scheduledWork, reminders, assigneeOptions };
+  return { selectableGroups, scheduledWork, reminders, assigneeOptions, objectives };
 }
 
 function getReadyDashboardUrl(sectorCode: string, calendarDate: string, groupId?: string): string {
@@ -128,11 +134,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       redirect(getReadyDashboardUrl(onlySector.code, calendarDate, groupFilter.selectedNode?.id));
     }
 
-    const { selectableGroups, scheduledWork, reminders, assigneeOptions } = await getDashboardData(
-      onlySector,
-      groupFilter,
-      calendarDate,
-    );
+    const { selectableGroups, scheduledWork, reminders, assigneeOptions, objectives } =
+      await getDashboardData(onlySector, groupFilter, calendarDate);
 
     return (
       <main className={`dashboard-page dashboard-page-${onlySector.code}`}>
@@ -150,6 +153,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             selectableGroups={selectableGroups}
             scheduledWork={scheduledWork}
             reminders={reminders}
+            objectives={objectives}
             assigneeOptions={assigneeOptions}
             currentUserId={context.identity.id}
             calendarDate={calendarDate}
@@ -178,11 +182,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       redirect(getReadyDashboardUrl(activeSector.code, calendarDate, groupFilter.selectedNode?.id));
     }
 
-    const { selectableGroups, scheduledWork, reminders, assigneeOptions } = await getDashboardData(
-      activeSector,
-      groupFilter,
-      calendarDate,
-    );
+    const { selectableGroups, scheduledWork, reminders, assigneeOptions, objectives } =
+      await getDashboardData(activeSector, groupFilter, calendarDate);
 
     return (
       <main className={`dashboard-page dashboard-page-${activeSector.code}`}>
@@ -205,6 +206,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             selectableGroups={selectableGroups}
             scheduledWork={scheduledWork}
             reminders={reminders}
+            objectives={objectives}
             assigneeOptions={assigneeOptions}
             currentUserId={context.identity.id}
             calendarDate={calendarDate}

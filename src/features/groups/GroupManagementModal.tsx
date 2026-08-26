@@ -284,7 +284,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
           <Divider />
           <Stack gap="sm">
             <Text fw={600}>Nuovo nodo</Text>
-            <Grid align="end" gutter="md">
+            <Grid align="end" gap="md">
               <Grid.Col span={{ base: 12, md: 4 }}>
                 <TextInput
                   label="Nome"

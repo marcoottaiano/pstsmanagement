@@ -30,7 +30,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body>
         <MantineProvider theme={theme} defaultColorScheme="light">
-          <Notifications position="top-right" />
+          <Notifications
+            position="bottom-right"
+            limit={4}
+            classNames={{ notification: "app-notification" }}
+          />
           {children}
         </MantineProvider>
       </body>

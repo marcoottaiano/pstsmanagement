@@ -1,9 +1,11 @@
-import { Box, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Box, SimpleGrid, Stack } from "@mantine/core";
 
 import type { Sector } from "@/features/auth/auth.types";
 import { DashboardCalendar } from "@/features/calendar/DashboardCalendar";
 import { GroupFilterBar } from "@/features/groups/GroupFilterBar";
 import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
+import { ObjectiveSidebarCard } from "@/features/objectives/ObjectiveSidebarCard";
+import type { Objective } from "@/features/objectives/objectives.types";
 import { ReminderSidebarCard } from "@/features/reminders/ReminderSidebarCard";
 import type { Reminder, ReminderPerson } from "@/features/reminders/reminders.types";
 import type { ScheduledWorkCalendarItem } from "@/features/scheduled-work/scheduled-work.types";
@@ -15,6 +17,7 @@ type DashboardShellProps = Readonly<{
   selectableGroups: readonly GroupNode[];
   scheduledWork: readonly ScheduledWorkCalendarItem[];
   reminders: readonly Reminder[];
+  objectives: readonly Objective[];
   assigneeOptions: readonly ReminderPerson[];
   currentUserId: string;
   calendarDate: string;
@@ -27,6 +30,7 @@ export function DashboardShell({
   selectableGroups,
   scheduledWork,
   reminders,
+  objectives,
   assigneeOptions,
   currentUserId,
   calendarDate,
@@ -64,15 +68,12 @@ export function DashboardShell({
             preferredGroupId={preferredGroupId}
           />
           {groupFilter.selectedNode ? (
-            <Paper withBorder p="lg">
-              <Title order={2} size="h3">
-                Obiettivi
-              </Title>
-              <Text c="dimmed" size="sm" mt="xs">
-                Gli obiettivi di {groupFilter.selectedNode.name} saranno disponibili nelle prossime
-                fasi.
-              </Text>
-            </Paper>
+            <ObjectiveSidebarCard
+              sectorId={activeSector.id}
+              objectives={objectives}
+              groups={selectableGroups}
+              preferredGroupId={preferredGroupId}
+            />
           ) : null}
         </Box>
       </SimpleGrid>

@@ -16,9 +16,11 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPlus, IconRotateClockwise } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { useState } from "react";
 
 import type { GroupNode } from "@/features/groups/groups.types";
+import { celebrateFromElement } from "@/lib/celebration";
 
 import { updateReminderStatus } from "./reminders.actions";
 import { formatReminderDue } from "./reminders.dates";
@@ -62,7 +64,12 @@ export function ReminderSidebarCard({
   const [pendingReminderId, setPendingReminderId] = useState<string | null>(null);
   const sections = getReminderSections(reminders, currentUserId);
 
-  async function toggleStatus(reminder: Reminder): Promise<void> {
+  async function toggleStatus(
+    reminder: Reminder,
+    event: MouseEvent<HTMLButtonElement>,
+  ): Promise<void> {
+    const button = event.currentTarget;
+    const completing = reminder.status === "OPEN";
     setPendingReminderId(reminder.id);
     const result = await updateReminderStatus({
       id: reminder.id,
@@ -76,6 +83,9 @@ export function ReminderSidebarCard({
       return;
     }
 
+    if (completing) {
+      celebrateFromElement(button);
+    }
     notifications.show({ color: "green", message: result.success });
     router.refresh();
   }
@@ -178,7 +188,7 @@ export function ReminderSidebarCard({
                             variant={completed ? "light" : "filled"}
                             color={completed ? "gray" : "teal"}
                             loading={pendingReminderId === reminder.id}
-                            onClick={() => void toggleStatus(reminder)}
+                            onClick={(event) => void toggleStatus(reminder, event)}
                             aria-label={
                               completed ? `Riapri ${reminder.title}` : `Completa ${reminder.title}`
                             }

@@ -202,7 +202,6 @@ Per ogni obiettivo dovrà essere possibile visualizzare almeno:
 - il gruppo di appartenenza;
 - il periodo di riferimento;
 - lo stato di avanzamento;
-- l’eventuale data prevista per il raggiungimento.
 
 Gli utenti potranno creare, modificare, aggiornare ed eliminare gli obiettivi dei gruppi ai quali hanno accesso.
 
