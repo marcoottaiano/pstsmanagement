@@ -8,7 +8,7 @@ import interactionPlugin, {
   type EventResizeDoneArg,
 } from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
-import { Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Button, Group, Paper, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -132,13 +132,33 @@ function toFullCalendarEvent(item: CalendarItem) {
 
 function EventContent({ event, timeText }: EventContentArg) {
   const reminder = event.extendedProps.itemType === "reminder";
+  const kind = reminder ? "Promemoria" : "Lavoro programmato";
+  const groupName = String(event.extendedProps.groupName);
+
   return (
-    <span className="calendar-event-content">
-      <span className="calendar-event-kind">{reminder ? "Promemoria" : "Lavoro"}</span>
-      {timeText ? <span className="calendar-event-time">{timeText}</span> : null}
-      <span className="calendar-event-title">{event.title}</span>
-      <span className="calendar-event-group">{String(event.extendedProps.groupName)}</span>
-    </span>
+    <Tooltip
+      withArrow
+      multiline
+      openDelay={350}
+      position="top"
+      label={
+        <Stack gap={2}>
+          <Text size="xs" fw={700}>
+            {event.title}
+          </Text>
+          <Text size="xs">{kind}</Text>
+          <Text size="xs">{groupName}</Text>
+          {timeText ? <Text size="xs">{timeText}</Text> : null}
+        </Stack>
+      }
+    >
+      <span className="calendar-event-content">
+        <span className="calendar-event-kind">{reminder ? "Promemoria" : "Lavoro"}</span>
+        {timeText ? <span className="calendar-event-time">{timeText}</span> : null}
+        <span className="calendar-event-title">{event.title}</span>
+        <span className="calendar-event-group">{groupName}</span>
+      </span>
+    </Tooltip>
   );
 }
 
@@ -159,6 +179,7 @@ export function DashboardCalendar({
     ...scheduledWork,
     ...reminders.filter((reminder) => reminder.dueAt !== null).map(toReminderCalendarItem),
   ];
+  const calendarScopeKey = `${calendarDate}:${groups.map((group) => group.id).join(",")}`;
 
   function openScheduledWorkModal(preset: ScheduledWorkPreset): void {
     setModalState({
@@ -263,13 +284,17 @@ export function DashboardCalendar({
 
         {groups.length === 0 ? (
           <Text c="dimmed" className="scheduled-work-empty-groups">
-            Crea o seleziona almeno un GROUP attivo per programmare i lavori.
+            Prima crea un gruppo attivo da “Gestisci struttura”; poi potrai programmare i lavori.
+          </Text>
+        ) : calendarItems.length === 0 ? (
+          <Text c="dimmed" className="scheduled-work-empty-groups">
+            Il calendario è vuoto. Clicca un giorno oppure usa “Nuovo lavoro” per iniziare.
           </Text>
         ) : null}
 
         <div className="scheduled-work-calendar-container">
           <FullCalendar
-            key={calendarDate}
+            key={calendarScopeKey}
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             initialDate={calendarDate}

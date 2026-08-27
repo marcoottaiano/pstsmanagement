@@ -73,14 +73,12 @@ body {
 
 .dashboard-page-artistic {
   background-image:
-    linear-gradient(rgb(248 249 250 / 68%), rgb(248 249 250 / 68%)),
-    url("/dashboard-artistic.png");
+    linear-gradient(rgb(248 249 250 / 68%), rgb(248 249 250 / 68%)), url("/dashboard-artistic.png");
 }
 
 .dashboard-page-rhythmic {
   background-image:
-    linear-gradient(rgb(248 249 250 / 68%), rgb(248 249 250 / 68%)),
-    url("/dashboard-rhythmic.png");
+    linear-gradient(rgb(248 249 250 / 68%), rgb(248 249 250 / 68%)), url("/dashboard-rhythmic.png");
 }
 
 .dashboard-header {
@@ -105,6 +103,7 @@ body {
 }
 
 .dashboard-header-sector {
+  width: 12.5rem;
   justify-self: end;
 }
 
@@ -117,6 +116,8 @@ body {
 .dashboard-calendar {
   grid-column: span 2;
   min-width: 0;
+  border-color: var(--mantine-color-blue-2);
+  box-shadow: var(--mantine-shadow-md);
 }
 
 .scheduled-work-calendar-container {
@@ -159,9 +160,43 @@ body {
 }
 
 .scheduled-work-calendar-container .fc .fc-event {
+  position: relative;
   border-radius: var(--mantine-radius-xs);
   cursor: pointer;
   padding: 0.125rem 0.25rem;
+  transition:
+    scale 140ms ease,
+    translate 140ms ease,
+    filter 140ms ease,
+    box-shadow 140ms ease;
+  animation: calendar-event-reveal 180ms ease-out;
+}
+
+.scheduled-work-calendar-container .fc .fc-event:hover,
+.scheduled-work-calendar-container .fc .fc-event:focus-visible {
+  z-index: 2;
+  box-shadow: var(--mantine-shadow-md);
+  filter: saturate(1.08);
+  scale: 1.015;
+  translate: 0 -1px;
+}
+
+.scheduled-work-calendar-container .fc .fc-event:focus-visible {
+  outline: 2px solid var(--mantine-color-blue-6);
+  outline-offset: 2px;
+}
+
+.scheduled-work-calendar-container .fc .fc-day-today .fc-daygrid-day-frame {
+  box-shadow: inset 0 0 0 1px var(--mantine-color-blue-3);
+}
+
+.scheduled-work-calendar-container .fc .fc-day-today .fc-daygrid-day-number {
+  min-width: 1.75rem;
+  border-radius: 999px;
+  color: var(--mantine-color-blue-9);
+  background: var(--mantine-color-blue-1);
+  font-weight: 700;
+  text-align: center;
 }
 
 .calendar-event-content {
@@ -211,19 +246,67 @@ body {
   border-radius: var(--mantine-radius-sm);
 }
 
+.dashboard-empty-state {
+  border-style: dashed;
+  color: var(--mantine-color-gray-6);
+  background: var(--mantine-color-gray-0);
+}
+
+@media (width < 48em) {
+  .help-guide-modal .mantine-Stepper-stepLabel {
+    display: none;
+  }
+}
+
+.mantine-Button-root,
+.mantine-ActionIcon-root {
+  transition: scale 120ms ease;
+}
+
+.mantine-Button-root:active,
+.mantine-ActionIcon-root:active {
+  scale: 0.96;
+}
+
+.mantine-Input-input {
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.mantine-Input-input:focus,
+.mantine-Input-input:focus-within {
+  border-color: var(--mantine-color-blue-5);
+  box-shadow: 0 0 0 3px rgb(55 135 235 / 14%);
+}
+
+@keyframes calendar-event-reveal {
+  from {
+    opacity: 0;
+    translate: 0 0.35rem;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
 .dashboard-sidebar {
   display: grid;
   align-content: start;
   gap: var(--mantine-spacing-lg);
 }
 
-.reminder-list-item {
+.reminder-list-item,
+.objective-list-item {
   transition:
     border-color 120ms ease,
     box-shadow 120ms ease;
 }
 
-.reminder-list-item:hover {
+.reminder-list-item:hover,
+.objective-list-item:hover {
   border-color: var(--mantine-color-blue-3);
   box-shadow: var(--mantine-shadow-xs);
 }
@@ -235,17 +318,7 @@ body {
 }
 
 .objective-list-item {
-  padding: var(--mantine-spacing-xs) 0;
-  border-bottom: 1px solid var(--mantine-color-gray-3);
-  transition: background-color 120ms ease;
-}
-
-.objective-list-item:last-child {
-  border-bottom: 0;
-}
-
-.objective-list-item:hover {
-  background: var(--mantine-color-gray-0);
+  min-width: 0;
 }
 
 .objective-list-item-main {
@@ -253,21 +326,9 @@ body {
   flex: 1;
   width: 100%;
   min-width: 0;
-  padding: var(--mantine-spacing-xs);
-  border-radius: var(--mantine-radius-sm);
   color: var(--mantine-color-dark-8);
   text-align: left;
-  transition:
-    background-color 120ms ease,
-    color 120ms ease;
 }
-
-.objective-list-item-main:hover,
-.objective-list-item-main:focus-visible {
-  background: var(--mantine-color-blue-0);
-  color: var(--mantine-color-blue-9);
-}
-
 
 .app-notification {
   border: 1px solid var(--mantine-color-gray-4);
@@ -331,6 +392,32 @@ body {
 }
 
 @media (width < 48em) {
+  .dashboard-header-layout {
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    gap: var(--mantine-spacing-sm);
+  }
+
+  .dashboard-header-brand {
+    grid-column: 1;
+  }
+
+  .dashboard-header-title {
+    display: none;
+  }
+
+  .dashboard-header-sector {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    justify-self: stretch;
+  }
+
+  .dashboard-header-user {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
   .scheduled-work-calendar-container .fc .fc-toolbar {
     align-items: flex-start;
     flex-direction: column-reverse;

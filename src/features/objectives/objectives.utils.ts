@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import type { Objective, ObjectiveStatus } from "./objectives.types";
 
 export const OBJECTIVE_STATUS_PRESENTATION: Readonly<
@@ -28,7 +30,13 @@ export function getObjectiveSections(objectives: readonly Objective[]) {
 
 export function formatObjectivePeriod(objective: Objective): string {
   if (objective.periodStart && objective.periodEnd) {
-    return `${objective.periodStart} - ${objective.periodEnd}`;
+    return `${formatObjectiveDate(objective.periodStart)} - ${formatObjectiveDate(objective.periodEnd)}`;
   }
-  return objective.periodStart ?? objective.periodEnd ?? "Nessun periodo definito";
+
+  const periodDate = objective.periodStart ?? objective.periodEnd;
+  return periodDate ? formatObjectiveDate(periodDate) : "Nessun periodo definito";
+}
+
+function formatObjectiveDate(value: string): string {
+  return dayjs(value).format("DD/MM/YYYY");
 }

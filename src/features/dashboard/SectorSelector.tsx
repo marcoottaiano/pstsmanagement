@@ -11,11 +11,7 @@ type SectorSelectorProps = Readonly<{
   calendarDate?: string;
 }>;
 
-export function SectorSelector({
-  sectors,
-  activeSector,
-  calendarDate,
-}: SectorSelectorProps) {
+export function SectorSelector({ sectors, activeSector, calendarDate }: SectorSelectorProps) {
   const router = useRouter();
 
   function selectSector(sectorCode: string | null): void {
@@ -28,6 +24,7 @@ export function SectorSelector({
 
   return (
     <Select
+      className="dashboard-sector-selector"
       aria-label="Seleziona il settore attivo"
       placeholder="Seleziona settore"
       data={sectors.map((sector) => ({ value: sector.code, label: sector.name }))}
@@ -35,7 +32,7 @@ export function SectorSelector({
       onChange={selectSector}
       allowDeselect={false}
       size="sm"
-      w={200}
+      w="100%"
     />
   );
 }

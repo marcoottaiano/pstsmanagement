@@ -16,6 +16,11 @@ import { theme } from "@/theme";
 export const metadata: Metadata = {
   title: APP_CONFIG.name,
   description: APP_CONFIG.description,
+  icons: {
+    icon: [{ url: "/psts-logo.png", type: "image/png" }],
+    shortcut: "/psts-logo.png",
+    apple: "/psts-logo.png",
+  },
 };
 
 type RootLayoutProps = Readonly<{

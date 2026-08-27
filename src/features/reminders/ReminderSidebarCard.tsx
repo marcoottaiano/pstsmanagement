@@ -15,7 +15,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconPlus, IconRotateClockwise } from "@tabler/icons-react";
+import { IconBell, IconCheck, IconPlus, IconRotateClockwise } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
@@ -108,9 +108,25 @@ export function ReminderSidebarCard({
         </Group>
 
         {sections.length === 0 ? (
-          <Text c="dimmed" size="sm">
-            Nessun promemoria visibile in questa vista.
-          </Text>
+          <Paper withBorder p="md" className="dashboard-empty-state">
+            <Stack gap="xs" align="center">
+              <IconBell size={26} aria-hidden="true" />
+              <Text fw={650} size="sm">
+                Nessun promemoria in questa vista
+              </Text>
+              <Text c="dimmed" size="xs" ta="center">
+                Crea un promemoria personale oppure associalo a un gruppo.
+              </Text>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconPlus size={14} aria-hidden="true" />}
+                onClick={() => setModalState({ item: null, key: `create-${Date.now()}` })}
+              >
+                Crea promemoria
+              </Button>
+            </Stack>
+          </Paper>
         ) : (
           <Accordion
             multiple

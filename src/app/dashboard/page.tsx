@@ -23,7 +23,7 @@ import {
 } from "@/features/scheduled-work/scheduled-work.dates";
 
 export const metadata: Metadata = {
-  title: `Dashboard | ${APP_CONFIG.name}`,
+  title: APP_CONFIG.name,
 };
 
 type DashboardPageProps = Readonly<{

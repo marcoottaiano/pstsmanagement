@@ -88,7 +88,7 @@ export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterB
             })}
             {filter.nodes.length === 0 ? (
               <Text c="dimmed" size="sm">
-                Non ci sono ancora gruppi in questo settore.
+                Non ci sono ancora gruppi. Usa “Gestisci struttura” per creare il primo.
               </Text>
             ) : null}
             {filter.selectedNode ? (

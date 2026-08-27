@@ -1,4 +1,4 @@
-# PSTS Management
+# PSTS Planner
 
 Piattaforma web per organizzare il lavoro annuale dei settori di Ginnastica Artistica e Ginnastica Ritmica.
 

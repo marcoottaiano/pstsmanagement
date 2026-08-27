@@ -6,6 +6,7 @@ import { APP_CONFIG } from "@/config/app.config";
 import { logoutAction } from "@/features/auth/auth.actions";
 import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
 
+import { HelpGuide } from "./HelpGuide";
 import { SectorSelector } from "./SectorSelector";
 
 type DashboardHeaderProps = Readonly<{
@@ -24,7 +25,7 @@ export function DashboardHeader({
   return (
     <header className="dashboard-header">
       <div className="dashboard-header-layout">
-        <Group gap="sm" wrap="nowrap">
+        <Group className="dashboard-header-brand" gap="sm" wrap="nowrap">
           <Image
             src="/psts-logo.png"
             alt="Logo PSTS"
@@ -33,12 +34,9 @@ export function DashboardHeader({
             className="dashboard-logo"
             priority
           />
-          <Title order={1} size="h3" visibleFrom="xs">
+          <Title className="dashboard-header-title" order={1} size="h3" visibleFrom="xs">
             {APP_CONFIG.name}
           </Title>
-          <Text fw={650} hiddenFrom="xs">
-            PSTS
-          </Text>
         </Group>
 
         {sectors.length > 1 ? (
@@ -51,7 +49,8 @@ export function DashboardHeader({
           </div>
         ) : null}
 
-        <Group gap="sm" wrap="nowrap">
+        <Group className="dashboard-header-user" gap="sm" wrap="nowrap">
+          <HelpGuide />
           <Avatar color="clubBlue" radius="xl" aria-label={`Profilo di ${identity.displayName}`}>
             {identity.initials}
           </Avatar>

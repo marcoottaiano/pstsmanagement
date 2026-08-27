@@ -14,7 +14,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconPlus, IconRotateClockwise } from "@tabler/icons-react";
+import { IconCheck, IconPlus, IconRotateClockwise, IconTargetArrow } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
@@ -87,9 +87,25 @@ export function ObjectiveSidebarCard({
           Clicca su un obiettivo per modificarlo.
         </Text>
         {sections.length === 0 ? (
-          <Text c="dimmed" size="sm">
-            Nessun obiettivo in questa vista.
-          </Text>
+          <Paper withBorder p="md" className="dashboard-empty-state">
+            <Stack gap="xs" align="center">
+              <IconTargetArrow size={26} aria-hidden="true" />
+              <Text fw={650} size="sm">
+                Nessun obiettivo in questa vista
+              </Text>
+              <Text c="dimmed" size="xs" ta="center">
+                Definisci il primo obiettivo per il gruppo selezionato.
+              </Text>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconPlus size={14} aria-hidden="true" />}
+                onClick={() => setModalState({ item: null, key: `create-${Date.now()}` })}
+              >
+                Crea obiettivo
+              </Button>
+            </Stack>
+          </Paper>
         ) : (
           <Accordion
             multiple
@@ -112,11 +128,11 @@ export function ObjectiveSidebarCard({
                   </Group>
                 </Accordion.Control>
                 <Accordion.Panel>
-                  <Stack gap={0}>
+                  <Stack gap="xs">
                     {section.objectives.map((objective) => {
                       const completed = objective.status === "COMPLETED";
                       return (
-                        <div key={objective.id} className="objective-list-item">
+                        <Paper key={objective.id} withBorder p="sm" className="objective-list-item">
                           <Group align="flex-start" wrap="nowrap" gap="xs">
                             <UnstyledButton
                               className="objective-list-item-main"
@@ -159,7 +175,7 @@ export function ObjectiveSidebarCard({
                               {objective.description}
                             </Text>
                           ) : null}
-                        </div>
+                        </Paper>
                       );
                     })}
                   </Stack>
