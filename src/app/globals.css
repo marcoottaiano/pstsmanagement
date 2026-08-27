@@ -344,6 +344,22 @@ body {
   background: var(--mantine-color-gray-0);
 }
 
+.activity-log-item {
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.activity-log-item:hover {
+  border-color: var(--mantine-color-blue-3);
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.activity-log-item-content {
+  min-width: 0;
+  flex: 1;
+}
+
 @media (width < 48em) {
   .help-guide-modal .mantine-Stepper-stepLabel {
     display: none;

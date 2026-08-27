@@ -1,5 +1,5 @@
 import { Avatar, Box, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconLogout, IconUsers } from "@tabler/icons-react";
+import { IconHistory, IconLogout, IconUsers } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -18,6 +18,7 @@ type DashboardHeaderProps = Readonly<{
   activeSector?: Sector;
   calendarDate?: string;
   isAdmin?: boolean;
+  showActivityLogLink?: boolean;
   showUserManagementLink?: boolean;
 }>;
 
@@ -27,6 +28,7 @@ export function DashboardHeader({
   activeSector,
   calendarDate,
   isAdmin = false,
+  showActivityLogLink = true,
   showUserManagementLink = true,
 }: DashboardHeaderProps) {
   return (
@@ -59,6 +61,20 @@ export function DashboardHeader({
         <Group className="dashboard-header-user" gap="sm" wrap="nowrap" visibleFrom="sm">
           <HelpGuide />
           <NotificationCenter />
+          {isAdmin && showActivityLogLink ? (
+            <Link href="/dashboard/admin/activity" aria-label="Registro attività">
+              <Button
+                component="span"
+                variant="subtle"
+                color="gray"
+                leftSection={<IconHistory size={17} aria-hidden="true" />}
+              >
+                <Text span visibleFrom="lg">
+                  Attività
+                </Text>
+              </Button>
+            </Link>
+          ) : null}
           {isAdmin && showUserManagementLink ? (
             <Link href="/dashboard/admin/users" aria-label="Gestione utenti">
               <Button
@@ -102,6 +118,7 @@ export function DashboardHeader({
           activeSector={activeSector}
           calendarDate={calendarDate}
           isAdmin={isAdmin}
+          showActivityLogLink={showActivityLogLink}
           showUserManagementLink={showUserManagementLink}
           notificationCenter={<NotificationCenter variant="menu" />}
         />

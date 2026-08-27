@@ -4,10 +4,67 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15";
+    PostgrestVersion: "14.17";
   };
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string;
+          actor_email: string | null;
+          actor_id: string | null;
+          actor_name: string;
+          created_at: string;
+          entity_id: string | null;
+          entity_title: string;
+          entity_type: string;
+          id: string;
+          metadata: Json;
+          sector_id: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_email?: string | null;
+          actor_id?: string | null;
+          actor_name: string;
+          created_at?: string;
+          entity_id?: string | null;
+          entity_title: string;
+          entity_type: string;
+          id?: string;
+          metadata?: Json;
+          sector_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_email?: string | null;
+          actor_id?: string | null;
+          actor_name?: string;
+          created_at?: string;
+          entity_id?: string | null;
+          entity_title?: string;
+          entity_type?: string;
+          id?: string;
+          metadata?: Json;
+          sector_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_log_sector_id_fkey";
+            columns: ["sector_id"];
+            isOneToOne: false;
+            referencedRelation: "sectors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       group_nodes: {
         Row: {
           created_at: string;

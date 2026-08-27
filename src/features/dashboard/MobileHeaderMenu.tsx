@@ -11,7 +11,7 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import { IconLogout, IconUsers } from "@tabler/icons-react";
+import { IconHistory, IconLogout, IconUsers } from "@tabler/icons-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -28,6 +28,7 @@ type MobileHeaderMenuProps = Readonly<{
   activeSector?: Sector;
   calendarDate?: string;
   isAdmin: boolean;
+  showActivityLogLink: boolean;
   showUserManagementLink: boolean;
   notificationCenter: ReactNode;
 }>;
@@ -38,6 +39,7 @@ export function MobileHeaderMenu({
   activeSector,
   calendarDate,
   isAdmin,
+  showActivityLogLink,
   showUserManagementLink,
   notificationCenter,
 }: MobileHeaderMenuProps) {
@@ -109,6 +111,18 @@ export function MobileHeaderMenu({
           <Stack gap={4}>
             {notificationCenter}
             <HelpGuide variant="menu" onOpen={closeMenu} />
+            {isAdmin && showActivityLogLink ? (
+              <Link
+                href="/dashboard/admin/activity"
+                className="dashboard-mobile-menu-action"
+                onClick={closeMenu}
+              >
+                <IconHistory size={19} aria-hidden="true" />
+                <Text span fw={600} size="sm">
+                  Registro attività
+                </Text>
+              </Link>
+            ) : null}
             {isAdmin && showUserManagementLink ? (
               <Link
                 href="/dashboard/admin/users"

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 
+import { recordUserManagementActivity } from "@/features/activity/activity.audit";
 import { getAuthenticatedContext } from "@/features/auth/auth.data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -16,13 +17,14 @@ import type {
   SetUserSectorAccessInput,
 } from "./admin.types";
 
-async function hasAdminAccess(): Promise<boolean> {
+async function getAdminContext() {
   const context = await getAuthenticatedContext();
-  return context?.isAdmin ?? false;
+  return context?.isAdmin ? context : null;
 }
 
 function revalidateUserManagement(): void {
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/admin/activity");
   revalidatePath("/dashboard/admin/users");
 }
 
@@ -36,7 +38,8 @@ async function getApplicationOrigin(): Promise<string | null> {
 
 export async function inviteUser(input: InviteUserInput): Promise<AdminActionResult> {
   const parsed = inviteUserSchema.safeParse(input);
-  if (!parsed.success || !(await hasAdminAccess())) {
+  const context = parsed.success ? await getAdminContext() : null;
+  if (!parsed.success || !context) {
     return { error: "I dati inseriti non sono validi o non hai i permessi necessari." };
   }
 
@@ -70,6 +73,16 @@ export async function inviteUser(input: InviteUserInput): Promise<AdminActionRes
       message: profileResult.error.message,
       userId: data.user.id,
     });
+    await recordUserManagementActivity({
+      actor: context.identity,
+      action: "INVITED",
+      targetUserId: data.user.id,
+      targetDisplayName: parsed.data.displayName,
+      metadata: {
+        email: parsed.data.email,
+        configuration_status: "PROFILE_UPDATE_FAILED",
+      },
+    });
     return {
       error: "L’invito è stato inviato, ma il profilo non è stato configurato completamente.",
     };
@@ -87,12 +100,34 @@ export async function inviteUser(input: InviteUserInput): Promise<AdminActionRes
       message: sectorError.message,
       userId: data.user.id,
     });
+    await recordUserManagementActivity({
+      actor: context.identity,
+      action: "INVITED",
+      targetUserId: data.user.id,
+      targetDisplayName: parsed.data.displayName,
+      metadata: {
+        email: parsed.data.email,
+        sector_ids: [...parsed.data.sectorIds],
+        configuration_status: "SECTOR_ASSIGNMENT_FAILED",
+      },
+    });
     revalidateUserManagement();
     return {
       error: "L’invito è stato inviato, ma i settori devono essere assegnati manualmente.",
     };
   }
 
+  await recordUserManagementActivity({
+    actor: context.identity,
+    action: "INVITED",
+    targetUserId: data.user.id,
+    targetDisplayName: parsed.data.displayName,
+    metadata: {
+      email: parsed.data.email,
+      sector_ids: [...parsed.data.sectorIds],
+      configuration_status: "COMPLETED",
+    },
+  });
   revalidateUserManagement();
   return { success: `Invito inviato a ${parsed.data.email}.` };
 }
@@ -101,8 +136,24 @@ export async function setUserSectorAccess(
   input: SetUserSectorAccessInput,
 ): Promise<AdminActionResult> {
   const parsed = setUserSectorAccessSchema.safeParse(input);
-  if (!parsed.success || !(await hasAdminAccess())) {
+  const context = parsed.success ? await getAdminContext() : null;
+  if (!parsed.success || !context) {
     return { error: "I dati inseriti non sono validi o non hai i permessi necessari." };
+  }
+
+  const adminClient = createAdminClient();
+  const profileResult = await adminClient
+    .from("profiles")
+    .select("display_name, email")
+    .eq("id", parsed.data.userId)
+    .maybeSingle();
+  if (profileResult.error || !profileResult.data) {
+    console.error("Admin user access target query failed.", {
+      code: profileResult.error?.code,
+      message: profileResult.error?.message,
+      userId: parsed.data.userId,
+    });
+    return { error: "Non è stato possibile verificare l’utente selezionato." };
   }
 
   const supabase = await createClient();
@@ -120,6 +171,16 @@ export async function setUserSectorAccess(
     return { error: "Non è stato possibile aggiornare gli accessi dell’utente." };
   }
 
+  await recordUserManagementActivity({
+    actor: context.identity,
+    action: "ACCESS_UPDATED",
+    targetUserId: parsed.data.userId,
+    targetDisplayName: profileResult.data.display_name,
+    metadata: {
+      email: profileResult.data.email,
+      sector_ids: [...parsed.data.sectorIds],
+    },
+  });
   revalidateUserManagement();
   return { success: "Accessi aggiornati." };
 }
@@ -138,7 +199,7 @@ export async function deleteUser(input: DeleteUserInput): Promise<AdminActionRes
   const adminClient = createAdminClient();
   const { data: profile, error: profileError } = await adminClient
     .from("profiles")
-    .select("role")
+    .select("role, display_name, email")
     .eq("id", parsed.data.userId)
     .maybeSingle();
 
@@ -155,6 +216,8 @@ export async function deleteUser(input: DeleteUserInput): Promise<AdminActionRes
     return { error: "Gli utenti amministratori non possono essere eliminati." };
   }
 
+  const deletedDisplayName = profile?.display_name ?? "Utente eliminato";
+  const deletedEmail = profile?.email ?? null;
   const { error } = await adminClient.auth.admin.deleteUser(parsed.data.userId);
   if (error) {
     console.error("Admin user deletion failed.", {
@@ -168,6 +231,13 @@ export async function deleteUser(input: DeleteUserInput): Promise<AdminActionRes
     };
   }
 
+  await recordUserManagementActivity({
+    actor: context.identity,
+    action: "USER_DELETED",
+    targetUserId: parsed.data.userId,
+    targetDisplayName: deletedDisplayName,
+    metadata: { email: deletedEmail },
+  });
   revalidateUserManagement();
   return { success: "Utente eliminato definitivamente." };
 }
