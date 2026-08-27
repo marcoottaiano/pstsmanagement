@@ -11,6 +11,12 @@ function redirectWithCookies(url: URL, sourceResponse: NextResponse): NextRespon
   sourceResponse.cookies.getAll().forEach((cookie) => {
     redirectResponse.cookies.set(cookie);
   });
+  ["Cache-Control", "Expires", "Pragma"].forEach((headerName) => {
+    const value = sourceResponse.headers.get(headerName);
+    if (value) {
+      redirectResponse.headers.set(headerName, value);
+    }
+  });
 
   return redirectResponse;
 }
@@ -23,11 +29,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headersToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
+        });
+        Object.entries(headersToSet).forEach(([name, value]) => {
+          response.headers.set(name, value);
         });
       },
     },

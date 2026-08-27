@@ -49,7 +49,7 @@ export const objectiveDatabaseSchema = z
     status: objectiveStatusSchema,
     period_start: dateSchema.nullable(),
     period_end: dateSchema.nullable(),
-    created_by: uuidSchema,
+    created_by: uuidSchema.nullable(),
     created_at: z.string().datetime({ offset: true }),
     updated_at: z.string().datetime({ offset: true }),
   })

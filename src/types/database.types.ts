@@ -59,10 +59,71 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          created_at: string;
+          due_at: string | null;
+          id: string;
+          kind: string;
+          message: string;
+          read_at: string | null;
+          recipient_id: string;
+          reminder_id: string;
+          sector_id: string;
+          title: string;
+        };
+        Insert: {
+          created_at?: string;
+          due_at?: string | null;
+          id?: string;
+          kind: string;
+          message: string;
+          read_at?: string | null;
+          recipient_id: string;
+          reminder_id: string;
+          sector_id: string;
+          title: string;
+        };
+        Update: {
+          created_at?: string;
+          due_at?: string | null;
+          id?: string;
+          kind?: string;
+          message?: string;
+          read_at?: string | null;
+          recipient_id?: string;
+          reminder_id?: string;
+          sector_id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_reminder_id_fkey";
+            columns: ["reminder_id"];
+            isOneToOne: false;
+            referencedRelation: "reminders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_sector_id_fkey";
+            columns: ["sector_id"];
+            isOneToOne: false;
+            referencedRelation: "sectors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       objectives: {
         Row: {
           created_at: string;
-          created_by: string;
+          created_by: string | null;
           description: string | null;
           group_id: string;
           id: string;
@@ -75,7 +136,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           description?: string | null;
           group_id: string;
           id?: string;
@@ -88,7 +149,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           description?: string | null;
           group_id?: string;
           id?: string;
@@ -129,6 +190,7 @@ export type Database = {
           display_name: string;
           email: string | null;
           id: string;
+          role: string;
           updated_at: string;
         };
         Insert: {
@@ -136,6 +198,7 @@ export type Database = {
           display_name: string;
           email?: string | null;
           id: string;
+          role?: string;
           updated_at?: string;
         };
         Update: {
@@ -143,6 +206,7 @@ export type Database = {
           display_name?: string;
           email?: string | null;
           id?: string;
+          role?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -180,7 +244,7 @@ export type Database = {
       reminders: {
         Row: {
           created_at: string;
-          created_by: string;
+          created_by: string | null;
           description: string | null;
           due_all_day: boolean;
           due_at: string | null;
@@ -194,7 +258,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           description?: string | null;
           due_all_day?: boolean;
           due_at?: string | null;
@@ -208,7 +272,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           description?: string | null;
           due_all_day?: boolean;
           due_at?: string | null;
@@ -248,7 +312,7 @@ export type Database = {
         Row: {
           all_day: boolean;
           created_at: string;
-          created_by: string;
+          created_by: string | null;
           description: string | null;
           end_at: string | null;
           group_id: string;
@@ -261,7 +325,7 @@ export type Database = {
         Insert: {
           all_day?: boolean;
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           description?: string | null;
           end_at?: string | null;
           group_id: string;
@@ -274,7 +338,7 @@ export type Database = {
         Update: {
           all_day?: boolean;
           created_at?: string;
-          created_by?: string;
+          created_by?: string | null;
           description?: string | null;
           end_at?: string | null;
           group_id?: string;
@@ -387,6 +451,10 @@ export type Database = {
       };
       set_group_subtree_archive_state: {
         Args: { archived: boolean; selected_node_id: string };
+        Returns: undefined;
+      };
+      set_user_sector_access: {
+        Args: { target_sector_ids: string[]; target_user_id: string };
         Returns: undefined;
       };
       update_reminder_with_assignees: {

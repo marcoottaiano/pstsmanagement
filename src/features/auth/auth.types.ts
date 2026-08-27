@@ -13,6 +13,7 @@ export type AuthenticatedIdentity = Readonly<{
 
 type AuthenticatedContextBase = Readonly<{
   identity: AuthenticatedIdentity;
+  isAdmin: boolean;
   sectors: readonly Sector[];
 }>;
 

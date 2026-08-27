@@ -182,7 +182,9 @@ The application only requires:
 /dashboard
 ```
 
-Users will be created manually through Supabase administration.
+Users are invited by an application administrator from the protected user-management page.
+
+There must be no public self-registration flow.
 
 The login screen must support email and password authentication.
 
@@ -212,6 +214,7 @@ Fields:
 id UUID PRIMARY KEY
 display_name TEXT NOT NULL
 email TEXT
+role TEXT NOT NULL DEFAULT 'MEMBER'
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
@@ -295,17 +298,21 @@ Unique constraint:
 (user_id, sector_id)
 ```
 
-All authenticated users with access to a sector have the same permissions inside that sector.
+All authenticated users with access to a sector have the same permissions over sector planning
+data.
 
-There are no application-level roles such as:
+The application has two coarse roles:
 
 ```text
-admin
-manager
-technician
+ADMIN
+MEMBER
 ```
 
-Any valid authenticated user may create, update and delete data belonging to an accessible sector.
+Any valid authenticated user may create, update and delete planning data belonging to an
+accessible sector. Only an `ADMIN` may invite users and change their sector access.
+
+Administrative authorization must be checked on the server and in database operations. Hiding
+the administration link in the frontend is not a security mechanism.
 
 ---
 

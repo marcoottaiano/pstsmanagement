@@ -1,10 +1,12 @@
 import { Avatar, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconLogout } from "@tabler/icons-react";
+import { IconLogout, IconUsers } from "@tabler/icons-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { APP_CONFIG } from "@/config/app.config";
 import { logoutAction } from "@/features/auth/auth.actions";
 import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
+import { NotificationCenter } from "@/features/notifications/NotificationCenter";
 
 import { HelpGuide } from "./HelpGuide";
 import { SectorSelector } from "./SectorSelector";
@@ -14,6 +16,8 @@ type DashboardHeaderProps = Readonly<{
   sectors?: readonly Sector[];
   activeSector?: Sector;
   calendarDate?: string;
+  isAdmin?: boolean;
+  showUserManagementLink?: boolean;
 }>;
 
 export function DashboardHeader({
@@ -21,6 +25,8 @@ export function DashboardHeader({
   sectors = [],
   activeSector,
   calendarDate,
+  isAdmin = false,
+  showUserManagementLink = true,
 }: DashboardHeaderProps) {
   return (
     <header className="dashboard-header">
@@ -51,6 +57,21 @@ export function DashboardHeader({
 
         <Group className="dashboard-header-user" gap="sm" wrap="nowrap">
           <HelpGuide />
+          <NotificationCenter />
+          {isAdmin && showUserManagementLink ? (
+            <Link href="/dashboard/admin/users" aria-label="Gestione utenti">
+              <Button
+                component="span"
+                variant="subtle"
+                color="gray"
+                leftSection={<IconUsers size={17} aria-hidden="true" />}
+              >
+                <Text span visibleFrom="md">
+                  Utenti
+                </Text>
+              </Button>
+            </Link>
+          ) : null}
           <Avatar color="clubBlue" radius="xl" aria-label={`Profilo di ${identity.displayName}`}>
             {identity.initials}
           </Avatar>

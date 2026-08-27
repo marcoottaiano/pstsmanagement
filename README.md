@@ -56,7 +56,13 @@ npm run db:push
 npm run db:types
 ```
 
-Non eseguire reset sul progetto collegato e non caricare seed dimostrativi. Gli utenti vengono creati manualmente dal pannello Supabase.
+Non eseguire reset sul progetto collegato e non caricare seed dimostrativi. Gli utenti vengono
+invitati dalla sezione protetta **Gestione utenti**. Dopo aver applicato la migrazione dei ruoli,
+configura gli amministratori iniziali con:
+
+```bash
+npm run admins:configure
+```
 
 ## Documentazione
 

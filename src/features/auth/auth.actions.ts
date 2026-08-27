@@ -111,5 +111,5 @@ export async function updatePasswordAction(
   }
 
   revalidatePath("/", "layout");
-  redirect("/login?reset=success");
+  redirect("/dashboard");
 }

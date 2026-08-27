@@ -12,6 +12,7 @@ export const config = {
     "/login",
     "/forgot-password",
     "/reset-password",
+    "/accept-invite",
     "/auth/callback",
     "/dashboard/:path*",
   ],

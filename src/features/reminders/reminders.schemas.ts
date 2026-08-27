@@ -38,7 +38,7 @@ export const reminderDatabaseSchema = z
     due_all_day: z.boolean(),
     status: reminderStatusSchema,
     priority: reminderPrioritySchema,
-    created_by: uuidSchema,
+    created_by: uuidSchema.nullable(),
     created_at: timestampSchema,
     updated_at: timestampSchema,
   })

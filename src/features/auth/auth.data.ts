@@ -2,9 +2,29 @@ import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 
-import { authClaimsSchema, sectorSchema } from "./auth.schemas";
+import { authClaimsSchema, profileSchema, sectorSchema } from "./auth.schemas";
 import type { AuthenticatedContext } from "./auth.types";
 import { getFallbackDisplayName, getInitials } from "./auth.utils";
+
+const JWT_CLOCK_SKEW_RETRY_DELAY_MS = 1_000;
+
+type QueryError = Readonly<{
+  code?: string;
+  message?: string;
+}>;
+
+function isJwtIssuedAtFutureError(error: QueryError | null): boolean {
+  return (
+    error?.code === "PGRST303" &&
+    error.message?.toLocaleLowerCase("en-US").includes("jwt issued at future") === true
+  );
+}
+
+async function waitForJwtClockSkew(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, JWT_CLOCK_SKEW_RETRY_DELAY_MS);
+  });
+}
 
 export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedContext | null> => {
   const supabase = await createClient();
@@ -16,10 +36,24 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
   }
 
   const { sub: userId, email: claimEmail } = claimsResult.data;
-  const [profileResult, sectorsResult] = await Promise.all([
-    supabase.from("profiles").select("display_name, email").eq("id", userId).maybeSingle(),
+  let [profileResult, sectorsResult] = await Promise.all([
+    supabase.from("profiles").select("display_name, email, role").eq("id", userId).maybeSingle(),
     supabase.from("sectors").select("id, code, name").order("code"),
   ]);
+
+  if (
+    isJwtIssuedAtFutureError(profileResult.error) ||
+    isJwtIssuedAtFutureError(sectorsResult.error)
+  ) {
+    console.warn("Supabase rejected a newly issued JWT because of clock skew. Retrying once.", {
+      retryDelayMs: JWT_CLOCK_SKEW_RETRY_DELAY_MS,
+    });
+    await waitForJwtClockSkew();
+    [profileResult, sectorsResult] = await Promise.all([
+      supabase.from("profiles").select("display_name, email, role").eq("id", userId).maybeSingle(),
+      supabase.from("sectors").select("id, code, name").order("code"),
+    ]);
+  }
 
   if (profileResult.error || sectorsResult.error) {
     console.error("Dashboard authentication context query failed.", {
@@ -41,7 +75,15 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
     throw new Error("I settori restituiti dal database non sono validi.");
   }
 
-  const profile = profileResult.data;
+  const parsedProfile = profileResult.data ? profileSchema.safeParse(profileResult.data) : null;
+  if (parsedProfile && !parsedProfile.success) {
+    console.error("Dashboard profile response failed validation.", {
+      issues: parsedProfile.error.issues,
+    });
+    throw new Error("Il profilo restituito dal database non è valido.");
+  }
+
+  const profile = parsedProfile?.data;
   const email = profile?.email ?? claimEmail ?? null;
   const displayName = profile?.display_name ?? getFallbackDisplayName(email);
   const sectors = sectorsResultParsed.data;
@@ -57,6 +99,7 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
       status: "access-not-configured",
       profileConfigured: Boolean(profile),
       identity,
+      isAdmin: profile?.role === "ADMIN",
       sectors,
     };
   }
@@ -65,6 +108,7 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
     status: sectors.length === 1 ? "ready" : "sector-selection-required",
     profileConfigured: true,
     identity,
+    isAdmin: profile.role === "ADMIN",
     sectors,
   };
 });

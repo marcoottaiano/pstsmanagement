@@ -103,7 +103,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   if (context.status === "access-not-configured") {
     return (
       <main className="dashboard-page">
-        <DashboardHeader identity={context.identity} />
+        <DashboardHeader identity={context.identity} isAdmin={context.isAdmin} />
         <Container className="dashboard-content" py={{ base: "xl", sm: 48 }}>
           <AccessNotConfigured profileConfigured={context.profileConfigured} />
         </Container>
@@ -139,7 +139,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
     return (
       <main className={`dashboard-page dashboard-page-${onlySector.code}`}>
-        <DashboardHeader identity={context.identity} />
+        <DashboardHeader identity={context.identity} isAdmin={context.isAdmin} />
         <Container className="dashboard-content" py="lg">
           {groupNotice ? (
             <p className="dashboard-filter-notice" role="status">
@@ -200,6 +200,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <main className={`dashboard-page dashboard-page-${activeSector.code}`}>
         <DashboardHeader
           identity={context.identity}
+          isAdmin={context.isAdmin}
           sectors={context.sectors}
           activeSector={activeSector}
           calendarDate={calendarDate}
@@ -231,6 +232,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <main className="dashboard-page">
       <DashboardHeader
         identity={context.identity}
+        isAdmin={context.isAdmin}
         sectors={context.sectors}
         calendarDate={calendarDate}
       />

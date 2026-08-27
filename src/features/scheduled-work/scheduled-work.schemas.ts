@@ -33,7 +33,7 @@ export const scheduledWorkDatabaseSchema = z
     start_at: timestampSchema,
     end_at: timestampSchema.nullable(),
     all_day: z.boolean(),
-    created_by: uuidSchema,
+    created_by: uuidSchema.nullable(),
     created_at: timestampSchema,
     updated_at: timestampSchema,
   })

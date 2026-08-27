@@ -11,9 +11,10 @@ const initialLoginState: LoginActionState = {};
 
 type LoginFormProps = Readonly<{
   resetCompleted?: boolean;
+  linkError?: "invite" | "recovery";
 }>;
 
-export function LoginForm({ resetCompleted = false }: LoginFormProps) {
+export function LoginForm({ resetCompleted = false, linkError }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(loginAction, initialLoginState);
 
   return (
@@ -22,6 +23,18 @@ export function LoginForm({ resetCompleted = false }: LoginFormProps) {
         {resetCompleted ? (
           <Alert color="green" role="status" title="Password aggiornata">
             Ora puoi accedere con la nuova password.
+          </Alert>
+        ) : null}
+        {linkError ? (
+          <Alert
+            color="red"
+            icon={<IconAlertCircle size={18} aria-hidden="true" />}
+            role="alert"
+            title={linkError === "invite" ? "Invito non valido" : "Link non valido"}
+          >
+            {linkError === "invite"
+              ? "Il link di invito non è valido o è scaduto. Chiedi a un amministratore di inviarti un nuovo invito."
+              : "Il link per reimpostare la password non è valido o è scaduto."}
           </Alert>
         ) : null}
         {state.formError ? (

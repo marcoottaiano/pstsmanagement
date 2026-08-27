@@ -39,3 +39,11 @@ export const sectorSchema = z.object({
   code: z.enum(["artistic", "rhythmic"]),
   name: z.string().min(1),
 });
+
+export const userRoleSchema = z.enum(["ADMIN", "MEMBER"]);
+
+export const profileSchema = z.object({
+  display_name: z.string().min(1),
+  email: z.string().email().nullable(),
+  role: userRoleSchema,
+});

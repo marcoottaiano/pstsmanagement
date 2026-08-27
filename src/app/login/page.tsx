@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = Readonly<{
-  searchParams: Promise<Readonly<{ reset?: string }>>;
+  searchParams: Promise<Readonly<{ error?: string; reset?: string }>>;
 }>;
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -47,7 +47,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   Inserisci email e password per continuare.
                 </Text>
               </div>
-              <LoginForm resetCompleted={params.reset === "success"} />
+              <LoginForm
+                resetCompleted={params.reset === "success"}
+                linkError={
+                  params.error === "invite" || params.error === "recovery"
+                    ? params.error
+                    : undefined
+                }
+              />
             </Stack>
           </Paper>
         </Stack>

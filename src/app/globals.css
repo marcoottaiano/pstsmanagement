@@ -107,10 +107,49 @@ body {
   justify-self: end;
 }
 
+.dashboard-header-user {
+  grid-column: 3;
+  justify-self: end;
+}
+
 .dashboard-logo {
   width: 3rem;
   height: 3rem;
   object-fit: contain;
+}
+
+.notification-center-item {
+  width: 100%;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-gray-2);
+  transition: background-color 120ms ease;
+}
+
+.notification-center-item:hover,
+.notification-center-item:focus-visible {
+  background: var(--mantine-color-gray-0);
+}
+
+.notification-center-item[data-unread="true"] {
+  background: var(--mantine-color-blue-0);
+}
+
+.notification-center-item[data-unread="true"]:hover,
+.notification-center-item[data-unread="true"]:focus-visible {
+  background: var(--mantine-color-blue-1);
+}
+
+.notification-center-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.notification-center-unread-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--mantine-primary-color-filled);
 }
 
 .dashboard-calendar {
@@ -378,6 +417,10 @@ body {
 @media (width < 75em) {
   .dashboard-header-layout {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .dashboard-header-user {
+    grid-column: 2;
   }
 
   .dashboard-header-sector {

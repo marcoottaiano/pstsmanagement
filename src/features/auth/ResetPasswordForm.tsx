@@ -9,7 +9,13 @@ import type { PasswordResetActionState } from "./auth.types";
 
 const initialState: PasswordResetActionState = {};
 
-export function ResetPasswordForm() {
+type ResetPasswordFormProps = Readonly<{
+  submitLabel?: string;
+}>;
+
+export function ResetPasswordForm({
+  submitLabel = "Salva nuova password",
+}: ResetPasswordFormProps) {
   const [state, formAction, isPending] = useActionState(updatePasswordAction, initialState);
 
   return (
@@ -40,7 +46,7 @@ export function ResetPasswordForm() {
           required
         />
         <Button type="submit" loading={isPending} fullWidth>
-          Salva nuova password
+          {submitLabel}
         </Button>
       </Stack>
     </form>
