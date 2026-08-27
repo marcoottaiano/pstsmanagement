@@ -4,6 +4,7 @@ import { Avatar, Badge, Divider, Menu, Stack, Text, UnstyledButton } from "@mant
 import {
   IconChartBar,
   IconChevronDown,
+  IconFileDescription,
   IconHelp,
   IconHistory,
   IconLogout,
@@ -128,6 +129,15 @@ export function UserMenu({
               leftSection={<IconChartBar size={17} />}
             >
               Statistiche
+            </Menu.Item>
+          ) : null}
+          {isAdmin ? (
+            <Menu.Item
+              component={Link}
+              href="/dashboard/admin/reports"
+              leftSection={<IconFileDescription size={17} />}
+            >
+              Report mensili
             </Menu.Item>
           ) : null}
           {isAdmin && showActivityLogLink ? (

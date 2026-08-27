@@ -36,6 +36,7 @@ import {
   type ScheduledWorkPreset,
 } from "@/features/scheduled-work/ScheduledWorkFormModal";
 
+import { CalendarExportMenu } from "./CalendarExportMenu";
 import type { CalendarItem } from "./calendar.types";
 
 type DashboardCalendarProps = Readonly<{
@@ -277,12 +278,19 @@ export function DashboardCalendar({
               Lavori e promemoria · Europe/Rome.
             </Text>
           </div>
-          <Button
-            leftSection={<IconPlus size={18} aria-hidden="true" />}
-            onClick={() => openScheduledWorkModal(getDefaultPreset())}
-          >
-            Nuovo lavoro
-          </Button>
+          <Group gap="xs">
+            <CalendarExportMenu
+              sectorId={sector.id}
+              calendarDate={calendarDate}
+              groupIds={groups.map((group) => group.id)}
+            />
+            <Button
+              leftSection={<IconPlus size={18} aria-hidden="true" />}
+              onClick={() => openScheduledWorkModal(getDefaultPreset())}
+            >
+              Nuovo lavoro
+            </Button>
+          </Group>
         </Group>
 
         {groups.length === 0 ? (

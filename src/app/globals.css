@@ -493,6 +493,32 @@ body {
   background: var(--mantine-color-orange-0);
 }
 
+.monthly-report-item {
+  padding: var(--mantine-spacing-sm) 0;
+  border-top: 1px solid var(--mantine-color-gray-2);
+}
+
+.monthly-report-item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+@media print {
+
+  .dashboard-header,
+  .monthly-report-actions {
+    display: none !important;
+  }
+
+  .dashboard-page {
+    background: var(--mantine-color-white);
+  }
+
+  .monthly-report-document {
+    gap: 1rem;
+  }
+}
+
 @media (width < 75em) {
   .dashboard-header-layout {
     grid-template-columns: minmax(0, 1fr) auto;
