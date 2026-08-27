@@ -1,24 +1,12 @@
 "use client";
 
-import {
-  ActionIcon,
-  Button,
-  Group,
-  List,
-  Modal,
-  Paper,
-  Stack,
-  Stepper,
-  Text,
-  Tooltip,
-  UnstyledButton,
-} from "@mantine/core";
+import { Button, Group, List, Modal, Paper, Stack, Stepper, Text } from "@mantine/core";
 import {
   IconBell,
   IconCalendarMonth,
-  IconHelp,
   IconListTree,
   IconTargetArrow,
+  IconUsers,
 } from "@tabler/icons-react";
 import { useState } from "react";
 
@@ -81,50 +69,43 @@ const GUIDE_STEPS = [
   },
 ] as const;
 
+const ADMIN_GUIDE_STEP = {
+  title: "Amministrazione",
+  icon: IconUsers,
+  canDo: [
+    "Consultare statistiche, carichi di lavoro, scadenze e KPI dei settori autorizzati.",
+    "Esaminare il registro delle attività eseguite da utenti e amministratori.",
+    "Invitare utenti, assegnare settori e gestire gli accessi.",
+  ],
+  howTo: [
+    "Apri il menu del profilo in alto a destra per accedere alle funzioni amministrative.",
+    "Scegli “Statistiche” per consultare l'andamento operativo dei settori.",
+    "Usa “Registro attività” per filtrare le operazioni per utente, settore e periodo.",
+  ],
+} as const;
+
 type HelpGuideProps = Readonly<{
-  variant?: "icon" | "menu";
-  onOpen?: () => void;
+  isAdmin?: boolean;
+  opened?: boolean;
+  onClose?: () => void;
 }>;
 
-export function HelpGuide({ variant = "icon", onOpen }: HelpGuideProps) {
-  const [opened, setOpened] = useState(false);
+export function HelpGuide({ isAdmin = false, opened: controlledOpened, onClose }: HelpGuideProps) {
+  const [uncontrolledOpened, setUncontrolledOpened] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const opened = controlledOpened ?? uncontrolledOpened;
+  const steps = isAdmin ? [...GUIDE_STEPS, ADMIN_GUIDE_STEP] : GUIDE_STEPS;
 
   function closeGuide(): void {
-    setOpened(false);
+    setUncontrolledOpened(false);
     setActiveStep(0);
+    onClose?.();
   }
 
-  function openGuide(): void {
-    onOpen?.();
-    setOpened(true);
-  }
-
-  const lastStep = activeStep === GUIDE_STEPS.length - 1;
+  const lastStep = activeStep === steps.length - 1;
 
   return (
     <>
-      {variant === "menu" ? (
-        <UnstyledButton className="dashboard-mobile-menu-action" onClick={openGuide}>
-          <IconHelp size={19} aria-hidden="true" />
-          <Text span fw={600} size="sm">
-            Guida rapida
-          </Text>
-        </UnstyledButton>
-      ) : (
-        <Tooltip label="Guida rapida">
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
-            onClick={openGuide}
-            aria-label="Apri la guida rapida"
-          >
-            <IconHelp size={20} aria-hidden="true" />
-          </ActionIcon>
-        </Tooltip>
-      )}
-
       <Modal
         opened={opened}
         onClose={closeGuide}
@@ -139,7 +120,7 @@ export function HelpGuide({ variant = "icon", onOpen }: HelpGuideProps) {
           </Text>
 
           <Stepper active={activeStep} size="sm" iconSize={32} allowNextStepsSelect={false}>
-            {GUIDE_STEPS.map((step) => {
+            {steps.map((step) => {
               const StepIcon = step.icon;
               return (
                 <Stepper.Step
@@ -187,7 +168,7 @@ export function HelpGuide({ variant = "icon", onOpen }: HelpGuideProps) {
               Indietro
             </Button>
             <Text c="dimmed" size="xs" aria-live="polite">
-              {activeStep + 1} di {GUIDE_STEPS.length}
+              {activeStep + 1} di {steps.length}
             </Text>
             <Button
               onClick={() => {
@@ -195,7 +176,7 @@ export function HelpGuide({ variant = "icon", onOpen }: HelpGuideProps) {
                   closeGuide();
                   return;
                 }
-                setActiveStep((current) => Math.min(GUIDE_STEPS.length - 1, current + 1));
+                setActiveStep((current) => Math.min(steps.length - 1, current + 1));
               }}
             >
               {lastStep ? "Chiudi" : "Avanti"}

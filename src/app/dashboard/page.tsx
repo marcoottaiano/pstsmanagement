@@ -47,6 +47,7 @@ async function getDashboardData(
       (!groupFilter.selectedNode || groupFilter.scopeGroupIds.includes(node.id)),
   );
   const range = getVisibleMonthRange(calendarDate);
+  const scopeGroupIds = selectableGroups.map((group) => group.id);
   const groupNames = new Map(
     groupFilter.nodes
       .filter((node) => node.nodeType === "GROUP")
@@ -55,7 +56,7 @@ async function getDashboardData(
   const [scheduledWork, reminders, assigneeOptions, objectives] = await Promise.all([
     getScheduledWorkForVisibleRange(
       sector.id,
-      selectableGroups.map((group) => group.id),
+      scopeGroupIds,
       range.startAt,
       range.endAt,
       groupNames,
@@ -66,14 +67,16 @@ async function getDashboardData(
       groupNames,
     ),
     getReminderAssigneeOptions(sector.id),
-    getObjectivesForScope(
-      sector.id,
-      groupFilter.selectedNode ? groupFilter.scopeGroupIds : null,
-      groupNames,
-    ),
+    getObjectivesForScope(sector.id, scopeGroupIds, groupNames),
   ]);
 
-  return { selectableGroups, scheduledWork, reminders, assigneeOptions, objectives };
+  return {
+    selectableGroups,
+    scheduledWork,
+    reminders,
+    assigneeOptions,
+    objectives,
+  };
 }
 
 function getReadyDashboardUrl(sectorCode: string, calendarDate: string, groupId?: string): string {

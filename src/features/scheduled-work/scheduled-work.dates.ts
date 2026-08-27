@@ -35,6 +35,14 @@ export function getVisibleMonthRange(calendarDate: string): VisibleMonthRange {
   };
 }
 
+export function getUpcomingWeekRange(): VisibleMonthRange {
+  const now = dayjs().tz(ROME_TIME_ZONE);
+  return {
+    startAt: now.toISOString(),
+    endAt: now.add(7, "day").toISOString(),
+  };
+}
+
 export function romeDateTimeToIso(date: string, time = "00:00"): string | null {
   const localValue = `${date}T${time}`;
   const parsed = dayjs.tz(localValue, DATE_TIME_FORMAT, ROME_TIME_ZONE);

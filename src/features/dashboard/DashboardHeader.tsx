@@ -1,16 +1,12 @@
-import { Avatar, Box, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconHistory, IconLogout, IconUsers } from "@tabler/icons-react";
+import { Box, Group, Title } from "@mantine/core";
 import Image from "next/image";
-import Link from "next/link";
 
 import { APP_CONFIG } from "@/config/app.config";
-import { logoutAction } from "@/features/auth/auth.actions";
 import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
 import { NotificationCenter } from "@/features/notifications/NotificationCenter";
 
-import { HelpGuide } from "./HelpGuide";
-import { MobileHeaderMenu } from "./MobileHeaderMenu";
 import { SectorSelector } from "./SectorSelector";
+import { UserMenu } from "./UserMenu";
 
 type DashboardHeaderProps = Readonly<{
   identity: AuthenticatedIdentity;
@@ -58,61 +54,7 @@ export function DashboardHeader({
           </Box>
         ) : null}
 
-        <Group className="dashboard-header-user" gap="sm" wrap="nowrap" visibleFrom="sm">
-          <HelpGuide />
-          <NotificationCenter />
-          {isAdmin && showActivityLogLink ? (
-            <Link href="/dashboard/admin/activity" aria-label="Registro attività">
-              <Button
-                component="span"
-                variant="subtle"
-                color="gray"
-                leftSection={<IconHistory size={17} aria-hidden="true" />}
-              >
-                <Text span visibleFrom="lg">
-                  Attività
-                </Text>
-              </Button>
-            </Link>
-          ) : null}
-          {isAdmin && showUserManagementLink ? (
-            <Link href="/dashboard/admin/users" aria-label="Gestione utenti">
-              <Button
-                component="span"
-                variant="subtle"
-                color="gray"
-                leftSection={<IconUsers size={17} aria-hidden="true" />}
-              >
-                <Text span visibleFrom="md">
-                  Utenti
-                </Text>
-              </Button>
-            </Link>
-          ) : null}
-          <Avatar color="clubBlue" radius="xl" aria-label={`Profilo di ${identity.displayName}`}>
-            {identity.initials}
-          </Avatar>
-          <Stack gap={0} visibleFrom="sm" maw={220}>
-            <Text fw={600} size="sm" truncate="end">
-              {identity.displayName}
-            </Text>
-          </Stack>
-          <form action={logoutAction}>
-            <Button
-              type="submit"
-              variant="subtle"
-              color="gray"
-              leftSection={<IconLogout size={17} aria-hidden="true" />}
-              aria-label="Esci dall’applicazione"
-            >
-              <Text span visibleFrom="sm">
-                Esci
-              </Text>
-            </Button>
-          </form>
-        </Group>
-
-        <MobileHeaderMenu
+        <UserMenu
           identity={identity}
           sectors={sectors}
           activeSector={activeSector}
