@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Group, Paper, Select, Stack, Text, Title } from "@mantine/core";
-import { IconFilterOff } from "@tabler/icons-react";
+import { IconFilter, IconFilterOff } from "@tabler/icons-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import type { Sector } from "@/features/auth/auth.types";
@@ -62,9 +62,12 @@ export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterB
     <Paper withBorder p="md">
       <Group justify="space-between" align="end" gap="md" wrap="wrap">
         <Stack gap="xs" className="group-filter-controls">
-          <Title order={2} size="h3">
-            Filtra per gruppo
-          </Title>
+          <Group gap="xs" wrap="nowrap">
+            <IconFilter size={24} color="var(--mantine-color-blue-6)" aria-hidden="true" />
+            <Title order={2} size="h3">
+              Filtra per gruppo
+            </Title>
+          </Group>
           <Group gap="sm" align="end" wrap="wrap">
             {levels.map((nodes, index) => {
               const selectedAtLevel = filter.selectedPath[index];

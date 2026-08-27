@@ -9,12 +9,22 @@ import {
   Paper,
   Stack,
   Text,
+  ThemeIcon,
   Title,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconPlus, IconRotateClockwise, IconTargetArrow } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCircleCheck,
+  IconCircleDashed,
+  IconClockPause,
+  IconPlayerPlay,
+  IconPlus,
+  IconRotateClockwise,
+  IconTargetArrow,
+} from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
@@ -24,8 +34,12 @@ import { celebrateFromElement } from "@/lib/celebration";
 
 import { updateObjectiveStatus } from "./objectives.actions";
 import { ObjectiveFormModal } from "./ObjectiveFormModal";
-import type { Objective } from "./objectives.types";
-import { formatObjectivePeriod, getObjectiveSections } from "./objectives.utils";
+import type { Objective, ObjectiveStatus } from "./objectives.types";
+import {
+  formatObjectivePeriod,
+  getObjectiveSections,
+  OBJECTIVE_STATUS_PRESENTATION,
+} from "./objectives.utils";
 
 type ObjectiveSidebarCardProps = Readonly<{
   sectorId: string;
@@ -35,6 +49,13 @@ type ObjectiveSidebarCardProps = Readonly<{
 }>;
 
 type ModalState = Readonly<{ item: Objective | null; key: string }>;
+
+const OBJECTIVE_STATUS_ICONS = {
+  NOT_STARTED: IconCircleDashed,
+  IN_PROGRESS: IconPlayerPlay,
+  POSTPONED: IconClockPause,
+  COMPLETED: IconCircleCheck,
+} satisfies Record<ObjectiveStatus, typeof IconTargetArrow>;
 
 export function ObjectiveSidebarCard({
   sectorId,
@@ -72,9 +93,12 @@ export function ObjectiveSidebarCard({
     <Paper withBorder p="lg" mt="lg">
       <Stack gap="md">
         <Group justify="space-between" align="center">
-          <Title order={2} size="h3">
-            Obiettivi
-          </Title>
+          <Group gap="xs" wrap="nowrap">
+            <IconTargetArrow size={24} color="var(--mantine-color-violet-6)" aria-hidden="true" />
+            <Title order={2} size="h3">
+              Obiettivi
+            </Title>
+          </Group>
           <Button
             size="xs"
             leftSection={<IconPlus size={15} aria-hidden="true" />}
@@ -115,73 +139,88 @@ export function ObjectiveSidebarCard({
             variant="default"
             radius="sm"
           >
-            {sections.map((section) => (
-              <Accordion.Item key={section.status} value={section.status}>
-                <Accordion.Control>
-                  <Group justify="space-between" pr="sm">
-                    <Text fw={650} size="sm">
-                      {section.label}
-                    </Text>
-                    <Badge variant="light" color="gray" size="sm">
-                      {section.objectives.length}
-                    </Badge>
-                  </Group>
-                </Accordion.Control>
-                <Accordion.Panel>
-                  <Stack gap="xs">
-                    {section.objectives.map((objective) => {
-                      const completed = objective.status === "COMPLETED";
-                      return (
-                        <Paper key={objective.id} withBorder p="sm" className="objective-list-item">
-                          <Group align="flex-start" wrap="nowrap" gap="xs">
-                            <UnstyledButton
-                              className="objective-list-item-main"
-                              onClick={() =>
-                                setModalState({ item: objective, key: `edit-${objective.id}` })
-                              }
-                              aria-label={`Modifica obiettivo ${objective.title}`}
-                            >
-                              <Stack gap={3} align="flex-start">
-                                <Text fw={650} size="sm">
-                                  {objective.title}
-                                </Text>
-                                <Text c="dimmed" size="xs">
-                                  {objective.groupName} · {formatObjectivePeriod(objective)}
-                                </Text>
-                              </Stack>
-                            </UnstyledButton>
-                            <Tooltip label={completed ? "Riapri" : "Completa"}>
-                              <ActionIcon
-                                variant={completed ? "light" : "filled"}
-                                color={completed ? "gray" : "teal"}
-                                loading={pendingObjectiveId === objective.id}
-                                onClick={(event) => void toggleStatus(objective, event)}
-                                aria-label={
-                                  completed
-                                    ? `Riapri ${objective.title}`
-                                    : `Completa ${objective.title}`
+            {sections.map((section) => {
+              const presentation = OBJECTIVE_STATUS_PRESENTATION[section.status];
+              const StatusIcon = OBJECTIVE_STATUS_ICONS[section.status];
+
+              return (
+                <Accordion.Item key={section.status} value={section.status}>
+                  <Accordion.Control>
+                    <Group justify="space-between" pr="sm">
+                      <Group gap="xs" wrap="nowrap">
+                        <ThemeIcon variant="light" color={presentation.color} size="sm" radius="xl">
+                          <StatusIcon size={14} aria-hidden="true" />
+                        </ThemeIcon>
+                        <Text fw={650} size="sm">
+                          {section.label}
+                        </Text>
+                      </Group>
+                      <Badge variant="light" color={presentation.color} size="sm">
+                        {section.objectives.length}
+                      </Badge>
+                    </Group>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Stack gap="xs">
+                      {section.objectives.map((objective) => {
+                        const completed = objective.status === "COMPLETED";
+                        return (
+                          <Paper
+                            key={objective.id}
+                            withBorder
+                            p="sm"
+                            className="objective-list-item"
+                          >
+                            <Group align="flex-start" wrap="nowrap" gap="xs">
+                              <UnstyledButton
+                                className="objective-list-item-main"
+                                onClick={() =>
+                                  setModalState({ item: objective, key: `edit-${objective.id}` })
                                 }
+                                aria-label={`Modifica obiettivo ${objective.title}`}
                               >
-                                {completed ? (
-                                  <IconRotateClockwise size={16} aria-hidden="true" />
-                                ) : (
-                                  <IconCheck size={16} aria-hidden="true" />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                          {objective.description ? (
-                            <Text size="sm" mt="xs">
-                              {objective.description}
-                            </Text>
-                          ) : null}
-                        </Paper>
-                      );
-                    })}
-                  </Stack>
-                </Accordion.Panel>
-              </Accordion.Item>
-            ))}
+                                <Stack gap={3} align="flex-start">
+                                  <Text fw={650} size="sm">
+                                    {objective.title}
+                                  </Text>
+                                  <Text c="dimmed" size="xs">
+                                    {objective.groupName} · {formatObjectivePeriod(objective)}
+                                  </Text>
+                                </Stack>
+                              </UnstyledButton>
+                              <Tooltip label={completed ? "Riapri" : "Completa"}>
+                                <ActionIcon
+                                  variant={completed ? "light" : "filled"}
+                                  color={completed ? "gray" : "teal"}
+                                  loading={pendingObjectiveId === objective.id}
+                                  onClick={(event) => void toggleStatus(objective, event)}
+                                  aria-label={
+                                    completed
+                                      ? `Riapri ${objective.title}`
+                                      : `Completa ${objective.title}`
+                                  }
+                                >
+                                  {completed ? (
+                                    <IconRotateClockwise size={16} aria-hidden="true" />
+                                  ) : (
+                                    <IconCheck size={16} aria-hidden="true" />
+                                  )}
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                            {objective.description ? (
+                              <Text size="sm" mt="xs">
+                                {objective.description}
+                              </Text>
+                            ) : null}
+                          </Paper>
+                        );
+                      })}
+                    </Stack>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              );
+            })}
           </Accordion>
         )}
       </Stack>

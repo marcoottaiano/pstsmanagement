@@ -11,6 +11,7 @@ import {
   Stepper,
   Text,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import {
   IconBell,
@@ -80,7 +81,12 @@ const GUIDE_STEPS = [
   },
 ] as const;
 
-export function HelpGuide() {
+type HelpGuideProps = Readonly<{
+  variant?: "icon" | "menu";
+  onOpen?: () => void;
+}>;
+
+export function HelpGuide({ variant = "icon", onOpen }: HelpGuideProps) {
   const [opened, setOpened] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
 
@@ -89,21 +95,35 @@ export function HelpGuide() {
     setActiveStep(0);
   }
 
+  function openGuide(): void {
+    onOpen?.();
+    setOpened(true);
+  }
+
   const lastStep = activeStep === GUIDE_STEPS.length - 1;
 
   return (
     <>
-      <Tooltip label="Guida rapida">
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="lg"
-          onClick={() => setOpened(true)}
-          aria-label="Apri la guida rapida"
-        >
-          <IconHelp size={20} aria-hidden="true" />
-        </ActionIcon>
-      </Tooltip>
+      {variant === "menu" ? (
+        <UnstyledButton className="dashboard-mobile-menu-action" onClick={openGuide}>
+          <IconHelp size={19} aria-hidden="true" />
+          <Text span fw={600} size="sm">
+            Guida rapida
+          </Text>
+        </UnstyledButton>
+      ) : (
+        <Tooltip label="Guida rapida">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            onClick={openGuide}
+            aria-label="Apri la guida rapida"
+          >
+            <IconHelp size={20} aria-hidden="true" />
+          </ActionIcon>
+        </Tooltip>
+      )}
 
       <Modal
         opened={opened}

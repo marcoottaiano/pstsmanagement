@@ -10,7 +10,7 @@ import interactionPlugin, {
 import FullCalendar from "@fullcalendar/react";
 import { Button, Group, Paper, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconCalendarMonth, IconPlus } from "@tabler/icons-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -267,9 +267,12 @@ export function DashboardCalendar({
       <Stack gap="md">
         <Group justify="space-between" align="center">
           <div>
-            <Title order={2} size="h3">
-              Calendario
-            </Title>
+            <Group gap="xs" wrap="nowrap">
+              <IconCalendarMonth size={25} color="var(--mantine-color-blue-6)" aria-hidden="true" />
+              <Title order={2} size="h3">
+                Calendario
+              </Title>
+            </Group>
             <Text c="dimmed" size="sm">
               Lavori e promemoria · Europe/Rome.
             </Text>

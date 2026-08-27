@@ -1,17 +1,25 @@
+import { cache } from "react";
+
 import { NotificationCenterClient } from "./NotificationCenterClient";
 import { getNotificationFeed } from "./notifications.data";
 import type { NotificationFeed } from "./notifications.types";
 
-async function loadNotificationFeed(): Promise<NotificationFeed> {
+const loadNotificationFeed = cache(async (): Promise<NotificationFeed> => {
   try {
     return await getNotificationFeed();
   } catch (error) {
     console.error("Notification center load failed.", error);
     return { items: [], unreadCount: 0 };
   }
-}
+});
 
-export async function NotificationCenter() {
+type NotificationCenterProps = Readonly<{
+  variant?: "icon" | "menu";
+}>;
+
+export async function NotificationCenter({ variant = "icon" }: NotificationCenterProps) {
   const feed = await loadNotificationFeed();
-  return <NotificationCenterClient items={feed.items} unreadCount={feed.unreadCount} />;
+  return (
+    <NotificationCenterClient items={feed.items} unreadCount={feed.unreadCount} variant={variant} />
+  );
 }

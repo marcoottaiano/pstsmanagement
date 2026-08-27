@@ -9,9 +9,15 @@ type SectorSelectorProps = Readonly<{
   sectors: readonly Sector[];
   activeSector?: Sector;
   calendarDate?: string;
+  onChangeComplete?: () => void;
 }>;
 
-export function SectorSelector({ sectors, activeSector, calendarDate }: SectorSelectorProps) {
+export function SectorSelector({
+  sectors,
+  activeSector,
+  calendarDate,
+  onChangeComplete,
+}: SectorSelectorProps) {
   const router = useRouter();
 
   function selectSector(sectorCode: string | null): void {
@@ -19,6 +25,7 @@ export function SectorSelector({ sectors, activeSector, calendarDate }: SectorSe
       return;
     }
 
+    onChangeComplete?.();
     router.push(`/dashboard?sector=${sectorCode}${calendarDate ? `&date=${calendarDate}` : ""}`);
   }
 

@@ -30,6 +30,7 @@ import type { NotificationItem, NotificationKind } from "./notifications.types";
 type NotificationCenterClientProps = Readonly<{
   items: readonly NotificationItem[];
   unreadCount: number;
+  variant?: "icon" | "menu";
 }>;
 
 const KIND_PRESENTATION: Record<
@@ -44,7 +45,11 @@ const KIND_PRESENTATION: Record<
   REMINDER_OVERDUE: { color: "red", icon: IconAlertTriangle },
 };
 
-export function NotificationCenterClient({ items, unreadCount }: NotificationCenterClientProps) {
+export function NotificationCenterClient({
+  items,
+  unreadCount,
+  variant = "icon",
+}: NotificationCenterClientProps) {
   const router = useRouter();
   const [opened, setOpened] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -91,28 +96,50 @@ export function NotificationCenterClient({ items, unreadCount }: NotificationCen
       withinPortal
     >
       <Popover.Target>
-        <Indicator
-          inline
-          disabled={unreadCount === 0}
-          label={indicatorLabel}
-          size={18}
-          color="red"
-          offset={4}
-        >
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
+        {variant === "menu" ? (
+          <UnstyledButton
+            className="dashboard-mobile-menu-action"
+            onClick={() => setOpened((current) => !current)}
             aria-label={
               unreadCount > 0
                 ? `Notifiche: ${unreadCount} non lette`
                 : "Notifiche: nessuna non letta"
             }
-            onClick={() => setOpened((current) => !current)}
           >
-            <IconBell size={20} aria-hidden="true" />
-          </ActionIcon>
-        </Indicator>
+            <IconBell size={19} aria-hidden="true" />
+            <Text span fw={600} size="sm">
+              Notifiche
+            </Text>
+            {unreadCount > 0 ? (
+              <Text span className="dashboard-mobile-notification-count" size="xs" fw={700}>
+                {indicatorLabel}
+              </Text>
+            ) : null}
+          </UnstyledButton>
+        ) : (
+          <Indicator
+            inline
+            disabled={unreadCount === 0}
+            label={indicatorLabel}
+            size={18}
+            color="red"
+            offset={4}
+          >
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={
+                unreadCount > 0
+                  ? `Notifiche: ${unreadCount} non lette`
+                  : "Notifiche: nessuna non letta"
+              }
+              onClick={() => setOpened((current) => !current)}
+            >
+              <IconBell size={20} aria-hidden="true" />
+            </ActionIcon>
+          </Indicator>
+        )}
       </Popover.Target>
 
       <Popover.Dropdown p={0}>

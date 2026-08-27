@@ -1,4 +1,4 @@
-import { Avatar, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Avatar, Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconLogout, IconUsers } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
 import { NotificationCenter } from "@/features/notifications/NotificationCenter";
 
 import { HelpGuide } from "./HelpGuide";
+import { MobileHeaderMenu } from "./MobileHeaderMenu";
 import { SectorSelector } from "./SectorSelector";
 
 type DashboardHeaderProps = Readonly<{
@@ -40,22 +41,22 @@ export function DashboardHeader({
             className="dashboard-logo"
             priority
           />
-          <Title className="dashboard-header-title" order={1} size="h3" visibleFrom="xs">
+          <Title className="dashboard-header-title" order={1} size="h3" visibleFrom="sm">
             {APP_CONFIG.name}
           </Title>
         </Group>
 
         {sectors.length > 1 ? (
-          <div className="dashboard-header-sector">
+          <Box className="dashboard-header-sector" visibleFrom="sm">
             <SectorSelector
               sectors={sectors}
               activeSector={activeSector}
               calendarDate={calendarDate}
             />
-          </div>
+          </Box>
         ) : null}
 
-        <Group className="dashboard-header-user" gap="sm" wrap="nowrap">
+        <Group className="dashboard-header-user" gap="sm" wrap="nowrap" visibleFrom="sm">
           <HelpGuide />
           <NotificationCenter />
           {isAdmin && showUserManagementLink ? (
@@ -94,6 +95,16 @@ export function DashboardHeader({
             </Button>
           </form>
         </Group>
+
+        <MobileHeaderMenu
+          identity={identity}
+          sectors={sectors}
+          activeSector={activeSector}
+          calendarDate={calendarDate}
+          isAdmin={isAdmin}
+          showUserManagementLink={showUserManagementLink}
+          notificationCenter={<NotificationCenter variant="menu" />}
+        />
       </div>
     </header>
   );
