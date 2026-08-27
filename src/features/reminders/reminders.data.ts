@@ -1,3 +1,10 @@
+import {
+  DEFAULT_USER_AVATAR_BACKGROUND,
+  DEFAULT_USER_AVATAR_STYLE,
+  getDefaultAvatarSeed,
+  isUserAvatarBackground,
+  isUserAvatarStyle,
+} from "@/features/avatar/avatar";
 import { getInitials } from "@/features/auth/auth.utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,12 +27,25 @@ function toReminderPerson(profile: {
   id: string;
   display_name: string;
   email: string | null;
+  avatar_background: string | null;
+  avatar_style: string | null;
+  avatar_seed: string | null;
 }): ReminderPerson {
+  const avatarStyle = profile.avatar_style ?? DEFAULT_USER_AVATAR_STYLE;
+  const avatarBackground = profile.avatar_background ?? DEFAULT_USER_AVATAR_BACKGROUND;
+
   return {
     id: profile.id,
     displayName: profile.display_name,
     email: profile.email,
     initials: getInitials(profile.display_name),
+    avatar: {
+      style: isUserAvatarStyle(avatarStyle) ? avatarStyle : DEFAULT_USER_AVATAR_STYLE,
+      seed: profile.avatar_seed || getDefaultAvatarSeed(profile.display_name, profile.email),
+      background: isUserAvatarBackground(avatarBackground)
+        ? avatarBackground
+        : DEFAULT_USER_AVATAR_BACKGROUND,
+    },
   };
 }
 
@@ -49,7 +69,7 @@ export async function getReminderAssigneeOptions(
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, email")
+    .select("id, display_name, email, avatar_style, avatar_seed, avatar_background")
     .in("id", userIds)
     .order("display_name");
 
@@ -122,7 +142,7 @@ export async function getVisibleReminders(
   if (profileIds.length > 0) {
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, display_name, email")
+      .select("id, display_name, email, avatar_style, avatar_seed, avatar_background")
       .in("id", profileIds);
 
     if (profilesError) {

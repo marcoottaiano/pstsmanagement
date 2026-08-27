@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { UserAvatar } from "@/features/avatar/avatar";
+
 import { sectorSchema } from "./auth.schemas";
 
 export type Sector = z.infer<typeof sectorSchema>;
@@ -9,6 +11,7 @@ export type AuthenticatedIdentity = Readonly<{
   email: string | null;
   displayName: string;
   initials: string;
+  avatar: UserAvatar;
 }>;
 
 type AuthenticatedContextBase = Readonly<{

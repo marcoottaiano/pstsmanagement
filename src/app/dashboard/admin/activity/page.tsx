@@ -21,7 +21,7 @@ type AdminActivityPageProps = Readonly<{
 }>;
 
 export default async function AdminActivityPage({ searchParams }: AdminActivityPageProps) {
-  const context = await getAuthenticatedContext();
+  const [context, query] = await Promise.all([getAuthenticatedContext(), searchParams]);
   if (!context) {
     redirect("/login");
   }
@@ -29,16 +29,30 @@ export default async function AdminActivityPage({ searchParams }: AdminActivityP
     redirect("/dashboard");
   }
 
-  const filters = parseActivityLogFilters(await searchParams);
+  const requestedSectorCode = typeof query.sector === "string" ? query.sector : undefined;
+  const activeSector =
+    context.sectors.find((sector) => sector.code === requestedSectorCode) ?? context.sectors[0];
+
+  if (!activeSector) {
+    redirect("/dashboard");
+  }
+
+  const filters = { ...parseActivityLogFilters(query), sectorId: activeSector.id };
   const data = await getActivityLogPageData(filters);
 
   return (
     <main className="dashboard-page">
-      <DashboardHeader identity={context.identity} isAdmin showActivityLogLink={false} />
+      <DashboardHeader
+        identity={context.identity}
+        sectors={context.sectors}
+        activeSector={activeSector}
+        isAdmin
+        showActivityLogLink={false}
+      />
       <Container className="dashboard-content" py="xl">
         <Stack gap="xl">
           <div>
-            <Link href="/dashboard">
+            <Link href={`/dashboard?sector=${activeSector.code}`}>
               <Button
                 component="span"
                 variant="subtle"
@@ -57,7 +71,7 @@ export default async function AdminActivityPage({ searchParams }: AdminActivityP
                 <div>
                   <Title order={1}>Registro attività</Title>
                   <Text c="dimmed" mt={4}>
-                    Consulta le operazioni eseguite su pianificazione, gruppi e utenti.
+                    Consulta le operazioni eseguite su {activeSector.name}.
                   </Text>
                 </div>
               </Group>
@@ -67,7 +81,7 @@ export default async function AdminActivityPage({ searchParams }: AdminActivityP
             </Group>
           </div>
 
-          <ActivityFilters filters={filters} actors={data.actors} sectors={data.sectors} />
+          <ActivityFilters filters={filters} actors={data.actors} sectorCode={activeSector.code} />
           <ActivityLogList items={data.items} sectors={data.sectors} />
           <ActivityPagination currentPage={filters.page} totalPages={data.totalPages} />
         </Stack>

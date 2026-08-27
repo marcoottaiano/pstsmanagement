@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { IconPrinter } from "@tabler/icons-react";
+import { Button, Group, Paper, SimpleGrid, Stack, Text, ThemeIcon, Title } from "@mantine/core";
+import { IconFileDescription, IconPrinter } from "@tabler/icons-react";
 
 import type { Objective } from "@/features/objectives/objectives.types";
 import type { Reminder } from "@/features/reminders/reminders.types";
@@ -71,13 +71,18 @@ export function MonthlyReport({
 }: MonthlyReportProps) {
   return (
     <Stack gap="lg" className="monthly-report-document">
-      <Group justify="space-between" align="flex-start">
-        <div>
-          <Title order={1}>Report mensile</Title>
-          <Text c="dimmed" mt={4}>
-            {sectorName} | {groupName ?? "Tutti i gruppi"} | {monthLabel}
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Group align="center" wrap="nowrap">
+          <ThemeIcon color="clubBlue" variant="light" radius="md" size="xl">
+            <IconFileDescription size={24} aria-hidden="true" />
+          </ThemeIcon>
+          <div>
+            <Title order={1}>Report mensile</Title>
+            <Text c="dimmed" mt={4}>
+              {sectorName} | {groupName ?? "Tutti i gruppi"} | {monthLabel}
+            </Text>
+          </div>
+        </Group>
         <Button
           className="monthly-report-actions"
           variant="default"

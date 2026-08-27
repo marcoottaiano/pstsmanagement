@@ -2,6 +2,13 @@ import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 
+import {
+  DEFAULT_USER_AVATAR_BACKGROUND,
+  DEFAULT_USER_AVATAR_STYLE,
+  getDefaultAvatarSeed,
+  isUserAvatarBackground,
+  isUserAvatarStyle,
+} from "@/features/avatar/avatar";
 import { authClaimsSchema, profileSchema, sectorSchema } from "./auth.schemas";
 import type { AuthenticatedContext } from "./auth.types";
 import { getFallbackDisplayName, getInitials } from "./auth.utils";
@@ -37,7 +44,11 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
 
   const { sub: userId, email: claimEmail } = claimsResult.data;
   let [profileResult, sectorsResult] = await Promise.all([
-    supabase.from("profiles").select("display_name, email, role").eq("id", userId).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("display_name, email, role, avatar_style, avatar_seed, avatar_background")
+      .eq("id", userId)
+      .maybeSingle(),
     supabase.from("sectors").select("id, code, name").order("code"),
   ]);
 
@@ -50,7 +61,11 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
     });
     await waitForJwtClockSkew();
     [profileResult, sectorsResult] = await Promise.all([
-      supabase.from("profiles").select("display_name, email, role").eq("id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("display_name, email, role, avatar_style, avatar_seed, avatar_background")
+        .eq("id", userId)
+        .maybeSingle(),
       supabase.from("sectors").select("id, code, name").order("code"),
     ]);
   }
@@ -86,12 +101,21 @@ export const getAuthenticatedContext = cache(async (): Promise<AuthenticatedCont
   const profile = parsedProfile?.data;
   const email = profile?.email ?? claimEmail ?? null;
   const displayName = profile?.display_name ?? getFallbackDisplayName(email);
+  const avatarStyle = profile?.avatar_style ?? DEFAULT_USER_AVATAR_STYLE;
+  const avatarBackground = profile?.avatar_background ?? DEFAULT_USER_AVATAR_BACKGROUND;
   const sectors = sectorsResultParsed.data;
   const identity = {
     id: userId,
     email,
     displayName,
     initials: getInitials(displayName),
+    avatar: {
+      style: isUserAvatarStyle(avatarStyle) ? avatarStyle : DEFAULT_USER_AVATAR_STYLE,
+      seed: profile?.avatar_seed || getDefaultAvatarSeed(displayName, email),
+      background: isUserAvatarBackground(avatarBackground)
+        ? avatarBackground
+        : DEFAULT_USER_AVATAR_BACKGROUND,
+    },
   };
 
   if (!profile || sectors.length === 0) {

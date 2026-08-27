@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { UserAvatar } from "@/features/avatar/avatar";
+
 import {
   createReminderSchema,
   deleteReminderSchema,
@@ -25,6 +27,7 @@ export type ReminderPerson = Readonly<{
   displayName: string;
   email: string | null;
   initials: string;
+  avatar: UserAvatar;
 }>;
 
 export type Reminder = ReminderRecord &

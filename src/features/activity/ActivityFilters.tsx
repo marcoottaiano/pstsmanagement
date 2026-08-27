@@ -9,7 +9,7 @@ import type { ActivityFilterOption, ActivityLogFilters } from "./activity.types"
 type ActivityFiltersProps = Readonly<{
   filters: ActivityLogFilters;
   actors: readonly ActivityFilterOption[];
-  sectors: readonly ActivityFilterOption[];
+  sectorCode: string;
 }>;
 
 const entityOptions: readonly ActivityFilterOption[] = [
@@ -27,7 +27,7 @@ const periodOptions: readonly ActivityFilterOption[] = [
   { value: "ALL", label: "Tutto il periodo" },
 ];
 
-export function ActivityFilters({ filters, actors, sectors }: ActivityFiltersProps) {
+export function ActivityFilters({ filters, actors, sectorCode }: ActivityFiltersProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,13 +57,13 @@ export function ActivityFilters({ filters, actors, sectors }: ActivityFiltersPro
             color="gray"
             size="compact-sm"
             leftSection={<IconRefresh size={15} aria-hidden="true" />}
-            onClick={() => router.push(pathname)}
+            onClick={() => router.push(`${pathname}?sector=${sectorCode}`)}
           >
             Azzera
           </Button>
         </Group>
 
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
           <Select
             label="Autore"
             placeholder="Tutti gli utenti"
@@ -80,14 +80,6 @@ export function ActivityFilters({ filters, actors, sectors }: ActivityFiltersPro
             data={[...entityOptions]}
             value={filters.entityType ?? null}
             onChange={(value) => updateFilter("entity", value)}
-            clearable
-          />
-          <Select
-            label="Settore"
-            placeholder="Tutti i settori"
-            data={[...sectors]}
-            value={filters.sectorId ?? null}
-            onChange={(value) => updateFilter("sector", value)}
             clearable
           />
           <Select

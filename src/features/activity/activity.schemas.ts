@@ -28,14 +28,14 @@ export const activityLogRowSchema = z
     id: z.string().uuid(),
     actor_id: z.string().uuid().nullable(),
     actor_name: z.string().min(1),
-    actor_email: z.string().email().nullable(),
+    actor_email: z.string().nullable(),
     action: activityActionSchema,
     entity_type: activityEntityTypeSchema,
     entity_id: z.string().uuid().nullable(),
     entity_title: z.string().min(1),
     sector_id: z.string().uuid().nullable(),
     metadata: z.record(z.string(), z.unknown()),
-    created_at: z.iso.datetime(),
+    created_at: z.string().min(1),
   })
   .transform((row) => ({
     id: row.id,
@@ -54,7 +54,7 @@ export const activityLogRowSchema = z
 export const activityActorOptionSchema = z.object({
   id: z.string().uuid(),
   display_name: z.string().min(1),
-  email: z.string().email().nullable(),
+  email: z.string().nullable(),
 });
 
 export const activitySectorOptionSchema = z.object({

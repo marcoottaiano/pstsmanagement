@@ -1,7 +1,7 @@
 "use client";
 
 import { Select } from "@mantine/core";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { Sector } from "@/features/auth/auth.types";
 
@@ -18,15 +18,27 @@ export function SectorSelector({
   calendarDate,
   onChangeComplete,
 }: SectorSelectorProps) {
+  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   function selectSector(sectorCode: string | null): void {
     if (!sectorCode) {
       return;
     }
 
+    const nextParams = new URLSearchParams(
+      pathname === "/dashboard" ? undefined : searchParams.toString(),
+    );
+    nextParams.set("sector", sectorCode);
+    nextParams.delete("page");
+    nextParams.delete("group");
+    if (calendarDate) {
+      nextParams.set("date", calendarDate);
+    }
+
     onChangeComplete?.();
-    router.push(`/dashboard?sector=${sectorCode}${calendarDate ? `&date=${calendarDate}` : ""}`);
+    router.push(`${pathname}?${nextParams.toString()}`);
   }
 
   return (

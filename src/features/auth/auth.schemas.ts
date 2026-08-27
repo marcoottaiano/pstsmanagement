@@ -46,4 +46,7 @@ export const profileSchema = z.object({
   display_name: z.string().min(1),
   email: z.string().email().nullable(),
   role: userRoleSchema,
+  avatar_background: z.string().nullable(),
+  avatar_style: z.string().nullable(),
+  avatar_seed: z.string().nullable(),
 });

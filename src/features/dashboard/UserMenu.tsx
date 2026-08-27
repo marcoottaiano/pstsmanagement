@@ -1,23 +1,21 @@
 "use client";
 
-import { Avatar, Badge, Divider, Menu, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Avatar, Badge, Menu, Stack, Text, UnstyledButton } from "@mantine/core";
 import {
   IconChartBar,
   IconChevronDown,
-  IconFileDescription,
-  IconHelp,
   IconHistory,
   IconLogout,
+  IconUserCircle,
   IconUsers,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { useState } from "react";
 
+import { getAvatarDataUri } from "@/features/avatar/avatar";
 import { logoutAction } from "@/features/auth/auth.actions";
 import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
 
-import { HelpGuide } from "./HelpGuide";
 import { SectorSelector } from "./SectorSelector";
 
 type UserMenuProps = Readonly<{
@@ -28,7 +26,6 @@ type UserMenuProps = Readonly<{
   isAdmin: boolean;
   showActivityLogLink: boolean;
   showUserManagementLink: boolean;
-  notificationCenter: ReactNode;
 }>;
 
 export function UserMenu({
@@ -39,10 +36,10 @@ export function UserMenu({
   isAdmin,
   showActivityLogLink,
   showUserManagementLink,
-  notificationCenter,
 }: UserMenuProps) {
   const [opened, setOpened] = useState(false);
-  const [guideOpened, setGuideOpened] = useState(false);
+  const avatarSrc = getAvatarDataUri(identity.avatar);
+  const sectorQuery = activeSector ? `?sector=${activeSector.code}` : "";
 
   function closeMenu(): void {
     setOpened(false);
@@ -54,7 +51,7 @@ export function UserMenu({
         opened={opened}
         onChange={setOpened}
         position="bottom-end"
-        width={280}
+        width={220}
         shadow="md"
         withinPortal
       >
@@ -66,7 +63,7 @@ export function UserMenu({
             aria-haspopup="menu"
             data-expanded={opened || undefined}
           >
-            <Avatar color="clubBlue" radius="xl">
+            <Avatar src={avatarSrc} color="clubBlue" radius="xl">
               {identity.initials}
             </Avatar>
             <Text fw={600} size="sm" truncate="end" visibleFrom="sm">
@@ -77,20 +74,8 @@ export function UserMenu({
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Stack gap={2} px="sm" py="xs">
-            <Text fw={700} size="sm" truncate="end">
-              {identity.displayName}
-            </Text>
-            {identity.email ? (
-              <Text c="dimmed" size="xs" truncate="end">
-                {identity.email}
-              </Text>
-            ) : null}
-          </Stack>
-
           {sectors.length > 0 ? (
             <>
-              <Divider my="xs" hiddenFrom="sm" />
               <Stack gap="xs" px="sm" py="xs" hiddenFrom="sm">
                 <Text fw={650} size="xs">
                   Settore
@@ -111,39 +96,26 @@ export function UserMenu({
             </>
           ) : null}
 
-          <Menu.Divider />
-          {notificationCenter}
           <Menu.Item
-            leftSection={<IconHelp size={17} />}
-            onClick={() => {
-              closeMenu();
-              setGuideOpened(true);
-            }}
+            component={Link}
+            href="/dashboard/profile"
+            leftSection={<IconUserCircle size={17} />}
           >
-            Guida rapida
+            Profilo
           </Menu.Item>
           {isAdmin ? (
             <Menu.Item
               component={Link}
-              href="/dashboard/admin/statistics"
+              href={`/dashboard/admin/statistics${sectorQuery}`}
               leftSection={<IconChartBar size={17} />}
             >
               Statistiche
             </Menu.Item>
           ) : null}
-          {isAdmin ? (
-            <Menu.Item
-              component={Link}
-              href="/dashboard/admin/reports"
-              leftSection={<IconFileDescription size={17} />}
-            >
-              Report mensili
-            </Menu.Item>
-          ) : null}
           {isAdmin && showActivityLogLink ? (
             <Menu.Item
               component={Link}
-              href="/dashboard/admin/activity"
+              href={`/dashboard/admin/activity${sectorQuery}`}
               leftSection={<IconHistory size={17} />}
             >
               Registro attività
@@ -166,7 +138,6 @@ export function UserMenu({
           </form>
         </Menu.Dropdown>
       </Menu>
-      <HelpGuide isAdmin={isAdmin} opened={guideOpened} onClose={() => setGuideOpened(false)} />
     </>
   );
 }

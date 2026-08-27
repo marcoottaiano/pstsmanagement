@@ -61,6 +61,9 @@ export const reminderProfileSchema = z.object({
   id: uuidSchema,
   display_name: z.string().min(1),
   email: z.string().nullable(),
+  avatar_background: z.string().nullable(),
+  avatar_style: z.string().nullable(),
+  avatar_seed: z.string().nullable(),
 });
 
 export const reminderAssigneeRowSchema = z.object({

@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 
+import { getAvatarDataUri } from "@/features/avatar/avatar";
 import type { GroupNode } from "@/features/groups/groups.types";
 import { celebrateFromElement } from "@/lib/celebration";
 
@@ -228,6 +229,7 @@ export function ReminderSidebarCard({
                                         <Tooltip key={assignee.id} label={assignee.displayName}>
                                           <Avatar
                                             size="xs"
+                                            src={getAvatarDataUri(assignee.avatar)}
                                             color="clubBlue"
                                             aria-label={assignee.displayName}
                                           >

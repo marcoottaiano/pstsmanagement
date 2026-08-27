@@ -243,6 +243,9 @@ export type Database = {
       };
       profiles: {
         Row: {
+          avatar_background: string;
+          avatar_seed: string;
+          avatar_style: string;
           created_at: string;
           display_name: string;
           email: string | null;
@@ -251,6 +254,9 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          avatar_background?: string;
+          avatar_seed?: string;
+          avatar_style?: string;
           created_at?: string;
           display_name: string;
           email?: string | null;
@@ -259,6 +265,9 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          avatar_background?: string;
+          avatar_seed?: string;
+          avatar_style?: string;
           created_at?: string;
           display_name?: string;
           email?: string | null;

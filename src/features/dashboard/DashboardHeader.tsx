@@ -5,6 +5,7 @@ import { APP_CONFIG } from "@/config/app.config";
 import type { AuthenticatedIdentity, Sector } from "@/features/auth/auth.types";
 import { NotificationCenter } from "@/features/notifications/NotificationCenter";
 
+import { HelpGuideButton } from "./HelpGuideButton";
 import { SectorSelector } from "./SectorSelector";
 import { UserMenu } from "./UserMenu";
 
@@ -54,16 +55,19 @@ export function DashboardHeader({
           </Box>
         ) : null}
 
-        <UserMenu
-          identity={identity}
-          sectors={sectors}
-          activeSector={activeSector}
-          calendarDate={calendarDate}
-          isAdmin={isAdmin}
-          showActivityLogLink={showActivityLogLink}
-          showUserManagementLink={showUserManagementLink}
-          notificationCenter={<NotificationCenter variant="menu" />}
-        />
+        <Group className="dashboard-header-actions" gap="xs" wrap="nowrap">
+          <NotificationCenter />
+          <HelpGuideButton isAdmin={isAdmin} />
+          <UserMenu
+            identity={identity}
+            sectors={sectors}
+            activeSector={activeSector}
+            calendarDate={calendarDate}
+            isAdmin={isAdmin}
+            showActivityLogLink={showActivityLogLink}
+            showUserManagementLink={showUserManagementLink}
+          />
+        </Group>
       </div>
     </header>
   );
