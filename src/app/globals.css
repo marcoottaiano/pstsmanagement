@@ -371,6 +371,16 @@ body {
   transform: scale(1.06);
 }
 
+.help-guide-stepper .mantine-Stepper-steps {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.help-guide-stepper .mantine-Stepper-stepLabel {
+  white-space: nowrap;
+}
+
 .activity-log-item {
   transition:
     border-color 120ms ease,

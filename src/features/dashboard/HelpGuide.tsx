@@ -4,9 +4,10 @@ import { Button, Group, List, Modal, Paper, Stack, Stepper, Text } from "@mantin
 import {
   IconBell,
   IconCalendarMonth,
+  IconChartBar,
   IconListTree,
   IconTargetArrow,
-  IconUsers,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import { useState } from "react";
 
@@ -67,20 +68,35 @@ const GUIDE_STEPS = [
       "Clicca la card per modificarla oppure usa la spunta per completarla.",
     ],
   },
+  {
+    title: "Profilo",
+    icon: IconUserCircle,
+    canDo: [
+      "Modificare il nome visualizzato nell'applicazione.",
+      "Personalizzare avatar, stile e colore di sfondo del profilo.",
+      "Aggiornare la password inserendola due volte per conferma.",
+    ],
+    howTo: [
+      "Apri il menu utente in alto a destra e scegli “Profilo”.",
+      "Usa “Genera variante” per cambiare avatar senza modificare manualmente il codice della variante.",
+      "La mail è visibile nei dati profilo ma non può essere modificata dall'applicazione.",
+    ],
+  },
 ] as const;
 
 const ADMIN_GUIDE_STEP = {
   title: "Amministrazione",
-  icon: IconUsers,
+  icon: IconChartBar,
   canDo: [
-    "Consultare statistiche, carichi di lavoro, scadenze e KPI dei settori autorizzati.",
-    "Esaminare il registro delle attività eseguite da utenti e amministratori.",
+    "Consultare statistiche, carichi di lavoro, scadenze e KPI del settore selezionato.",
+    "Generare e stampare il report mensile dalla pagina Statistiche.",
+    "Esaminare il registro delle attività del settore selezionato.",
     "Invitare utenti, assegnare settori e gestire gli accessi.",
   ],
   howTo: [
-    "Apri il menu del profilo in alto a destra per accedere alle funzioni amministrative.",
-    "Scegli “Statistiche” per consultare l'andamento operativo dei settori.",
-    "Usa “Registro attività” per filtrare le operazioni per utente, settore e periodo.",
+    "Usa la select del settore nell'header per scegliere il contesto da analizzare.",
+    "Apri il menu utente e scegli “Statistiche” per vedere KPI e report mensile esportabile.",
+    "Usa “Registro attività” per filtrare le operazioni per utente, contenuto e periodo.",
   ],
 } as const;
 
@@ -111,7 +127,7 @@ export function HelpGuide({ isAdmin = false, opened: controlledOpened, onClose }
         onClose={closeGuide}
         title="Come usare PSTS Planner"
         centered
-        size="min(52rem, calc(100vw - 1rem))"
+        size="min(64rem, calc(100vw - 1rem))"
         className="help-guide-modal"
       >
         <Stack gap="lg">
@@ -119,7 +135,13 @@ export function HelpGuide({ isAdmin = false, opened: controlledOpened, onClose }
             Scopri cosa puoi fare in ogni area e come usare le funzioni principali.
           </Text>
 
-          <Stepper active={activeStep} size="sm" iconSize={32} allowNextStepsSelect={false}>
+          <Stepper
+            active={activeStep}
+            size="sm"
+            iconSize={32}
+            allowNextStepsSelect={false}
+            className="help-guide-stepper"
+          >
             {steps.map((step) => {
               const StepIcon = step.icon;
               return (
