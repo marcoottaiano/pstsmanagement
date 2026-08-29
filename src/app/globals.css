@@ -14,6 +14,18 @@ body {
   background: var(--mantine-color-gray-0);
 }
 
+/* Prevent Safari iOS autofocus zoom on input/select */
+@media (hover: none) and (pointer: coarse) {
+
+  input,
+  select,
+  textarea,
+  button,
+  [role="button"] {
+    font-size: 16px !important;
+  }
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--mantine-color-clubBlue-5) var(--mantine-color-gray-1);
