@@ -13,10 +13,10 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { GroupNode } from "@/features/groups/groups.types";
+import { getGroupNodePath } from "@/features/groups/groups.utils";
 
 import { createReminder, deleteReminder, updateReminder } from "./reminders.actions";
 import { reminderDueToFormParts, reminderDueToIso } from "./reminders.dates";
@@ -26,12 +26,13 @@ import type { Reminder, ReminderPerson } from "./reminders.types";
 type ReminderFormModalProps = Readonly<{
   opened: boolean;
   sectorId: string;
-  groups: readonly GroupNode[];
+  nodes: readonly GroupNode[];
   assigneeOptions: readonly ReminderPerson[];
   currentUserId: string;
-  preferredGroupId: string | null;
+  preferredNodeId: string | null;
   item: Reminder | null;
   onClose: () => void;
+  refreshAction: () => void;
 }>;
 
 type FormValues = {
@@ -39,7 +40,6 @@ type FormValues = {
   description: string;
   groupId: string;
   priority: string;
-  status: string;
   assigneeIds: string[];
   dueDate: string;
   dueTime: string;
@@ -51,14 +51,9 @@ const PRIORITY_OPTIONS = [
   { value: "HIGH", label: "Alta" },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "OPEN", label: "Aperto" },
-  { value: "COMPLETED", label: "Completato" },
-];
-
 function getInitialValues(
   item: Reminder | null,
-  preferredGroupId: string | null,
+  preferredNodeId: string | null,
   currentUserId: string,
   assigneeOptions: readonly ReminderPerson[],
 ): FormValues {
@@ -66,9 +61,8 @@ function getInitialValues(
     return {
       title: "",
       description: "",
-      groupId: preferredGroupId ?? "",
+      groupId: preferredNodeId ?? "",
       priority: "NORMAL",
-      status: "OPEN",
       assigneeIds: assigneeOptions.some((option) => option.id === currentUserId)
         ? [currentUserId]
         : [],
@@ -83,7 +77,6 @@ function getInitialValues(
     description: item.description ?? "",
     groupId: item.groupId ?? "",
     priority: item.priority,
-    status: item.status,
     assigneeIds: item.assignees.map((assignee) => assignee.id),
     dueDate: due?.date ?? "",
     dueTime: item.dueAllDay ? "" : (due?.time ?? ""),
@@ -106,19 +99,19 @@ function getFieldErrors(issues: readonly { path: PropertyKey[]; message: string 
 export function ReminderFormModal({
   opened,
   sectorId,
-  groups,
+  nodes,
   assigneeOptions,
   currentUserId,
-  preferredGroupId,
+  preferredNodeId,
   item,
   onClose,
+  refreshAction,
 }: ReminderFormModalProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
   const form = useForm<FormValues>({
     mode: "controlled",
-    initialValues: getInitialValues(item, preferredGroupId, currentUserId, assigneeOptions),
+    initialValues: getInitialValues(item, preferredNodeId, currentUserId, assigneeOptions),
   });
 
   async function handleSubmit(values: FormValues): Promise<void> {
@@ -143,7 +136,6 @@ export function ReminderFormModal({
       dueAt,
       dueAllDay: !values.dueTime,
       priority: values.priority,
-      status: values.status,
       assigneeIds: values.assigneeIds,
     };
     setIsSubmitting(true);
@@ -178,7 +170,7 @@ export function ReminderFormModal({
 
     notifications.show({ color: "green", message: result.success });
     onClose();
-    router.refresh();
+    refreshAction();
   }
 
   async function handleDelete(): Promise<void> {
@@ -202,7 +194,7 @@ export function ReminderFormModal({
     notifications.show({ color: "green", message: result.success });
     setConfirmDeleteOpened(false);
     onClose();
-    router.refresh();
+    refreshAction();
   }
 
   const isFormComplete = form.values.title.trim().length > 0;
@@ -240,10 +232,15 @@ export function ReminderFormModal({
               <Select
                 label="Gruppo"
                 description="Lascia vuoto per un promemoria personale."
-                placeholder="Personale"
+                placeholder="Nessuna associazione"
                 clearable
                 searchable
-                data={groups.map((group) => ({ value: group.id, label: group.name }))}
+                data={nodes.map((node) => ({
+                  value: node.id,
+                  label: getGroupNodePath(nodes, node)
+                    .map((pathNode) => pathNode.name)
+                    .join(" / "),
+                }))}
                 key={form.key("groupId")}
                 {...form.getInputProps("groupId")}
               />
@@ -261,20 +258,13 @@ export function ReminderFormModal({
                 {...form.getInputProps("assigneeIds")}
               />
             </SimpleGrid>
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
               <Select
                 label="Priorità"
                 data={PRIORITY_OPTIONS}
                 allowDeselect={false}
                 key={form.key("priority")}
                 {...form.getInputProps("priority")}
-              />
-              <Select
-                label="Stato"
-                data={STATUS_OPTIONS}
-                allowDeselect={false}
-                key={form.key("status")}
-                {...form.getInputProps("status")}
               />
               <TextInput
                 type="date"

@@ -27,11 +27,11 @@ import {
   IconPlus,
   IconRotateClockwise,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 
 import { getAvatarDataUri } from "@/features/avatar/avatar";
+import { formatCompletionDateTime } from "@/features/dashboard/completion";
 import type { GroupNode } from "@/features/groups/groups.types";
 import { celebrateFromElement } from "@/lib/celebration";
 
@@ -44,10 +44,11 @@ import { ReminderFormModal } from "./ReminderFormModal";
 type ReminderSidebarCardProps = Readonly<{
   sectorId: string;
   reminders: readonly Reminder[];
-  groups: readonly GroupNode[];
+  nodes: readonly GroupNode[];
   assigneeOptions: readonly ReminderPerson[];
   currentUserId: string;
-  preferredGroupId: string | null;
+  preferredNodeId: string | null;
+  refreshAction: () => void;
 }>;
 
 type ModalState = Readonly<{
@@ -75,12 +76,12 @@ const SECTION_PRESENTATION = {
 export function ReminderSidebarCard({
   sectorId,
   reminders,
-  groups,
+  nodes,
   assigneeOptions,
   currentUserId,
-  preferredGroupId,
+  preferredNodeId,
+  refreshAction,
 }: ReminderSidebarCardProps) {
-  const router = useRouter();
   const [modalState, setModalState] = useState<ModalState | null>(null);
   const [pendingReminderId, setPendingReminderId] = useState<string | null>(null);
   const sections = getReminderSections(reminders, currentUserId);
@@ -108,7 +109,7 @@ export function ReminderSidebarCard({
       celebrateFromElement(button);
     }
     notifications.show({ color: "green", message: result.success });
-    router.refresh();
+    refreshAction();
   }
 
   return (
@@ -216,6 +217,11 @@ export function ReminderSidebarCard({
                                         Assegnato a te
                                       </Badge>
                                     ) : null}
+                                    {reminder.completedLate ? (
+                                      <Badge color="orange" variant="light" size="xs">
+                                        Completato in ritardo
+                                      </Badge>
+                                    ) : null}
                                   </Group>
                                   <Text c="dimmed" size="xs">
                                     {reminder.groupName ?? "Personale"}
@@ -223,12 +229,17 @@ export function ReminderSidebarCard({
                                       ? ` · ${formatReminderDue(reminder.dueAt, reminder.dueAllDay)}`
                                       : " · Nessuna scadenza"}
                                   </Text>
+                                  {reminder.completedAt ? (
+                                    <Text c="dimmed" size="xs">
+                                      Completato il {formatCompletionDateTime(reminder.completedAt)}
+                                    </Text>
+                                  ) : null}
                                   {reminder.assignees.length > 0 ? (
                                     <Avatar.Group>
-                                      {reminder.assignees.slice(0, 4).map((assignee) => (
+                                      {reminder.assignees.map((assignee) => (
                                         <Tooltip key={assignee.id} label={assignee.displayName}>
                                           <Avatar
-                                            size="xs"
+                                            size="sm"
                                             src={getAvatarDataUri(assignee.avatar)}
                                             color="clubBlue"
                                             aria-label={assignee.displayName}
@@ -237,9 +248,6 @@ export function ReminderSidebarCard({
                                           </Avatar>
                                         </Tooltip>
                                       ))}
-                                      {reminder.assignees.length > 4 ? (
-                                        <Avatar size="xs">+{reminder.assignees.length - 4}</Avatar>
-                                      ) : null}
                                     </Avatar.Group>
                                   ) : (
                                     <Text c="dimmed" size="xs">
@@ -285,12 +293,13 @@ export function ReminderSidebarCard({
           key={modalState.key}
           opened
           sectorId={sectorId}
-          groups={groups}
+          nodes={nodes}
           assigneeOptions={assigneeOptions}
           currentUserId={currentUserId}
-          preferredGroupId={preferredGroupId}
+          preferredNodeId={preferredNodeId}
           item={modalState.item}
           onClose={() => setModalState(null)}
+          refreshAction={refreshAction}
         />
       ) : null}
     </Paper>

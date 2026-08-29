@@ -20,7 +20,6 @@ const reminderFields = {
   dueAt: timestampSchema.nullable(),
   dueAllDay: z.boolean(),
   priority: reminderPrioritySchema,
-  status: reminderStatusSchema,
   assigneeIds: uuidSchema
     .array()
     .max(100)
@@ -37,6 +36,8 @@ export const reminderDatabaseSchema = z
     due_at: timestampSchema.nullable(),
     due_all_day: z.boolean(),
     status: reminderStatusSchema,
+    completed_at: timestampSchema.nullable(),
+    completed_late: z.boolean(),
     priority: reminderPrioritySchema,
     created_by: uuidSchema.nullable(),
     created_at: timestampSchema,
@@ -51,6 +52,8 @@ export const reminderDatabaseSchema = z
     dueAt: reminder.due_at,
     dueAllDay: reminder.due_all_day,
     status: reminder.status,
+    completedAt: reminder.completed_at,
+    completedLate: reminder.completed_late,
     priority: reminder.priority,
     createdBy: reminder.created_by,
     createdAt: reminder.created_at,

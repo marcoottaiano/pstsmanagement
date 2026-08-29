@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { GroupNode } from "@/features/groups/groups.types";
@@ -28,30 +27,22 @@ type ObjectiveFormModalProps = Readonly<{
   preferredGroupId: string | null;
   item: Objective | null;
   onClose: () => void;
+  refreshAction: () => void;
 }>;
 
 type FormValues = {
   title: string;
   description: string;
   groupId: string;
-  status: string;
   periodStart: string;
   periodEnd: string;
 };
-
-const STATUS_OPTIONS = [
-  { value: "NOT_STARTED", label: "Da iniziare" },
-  { value: "IN_PROGRESS", label: "In corso" },
-  { value: "POSTPONED", label: "Posticipato" },
-  { value: "COMPLETED", label: "Completato" },
-];
 
 function getInitialValues(item: Objective | null, preferredGroupId: string | null): FormValues {
   return {
     title: item?.title ?? "",
     description: item?.description ?? "",
     groupId: item?.groupId ?? preferredGroupId ?? "",
-    status: item?.status ?? "NOT_STARTED",
     periodStart: item?.periodStart ?? "",
     periodEnd: item?.periodEnd ?? "",
   };
@@ -70,8 +61,8 @@ export function ObjectiveFormModal({
   preferredGroupId,
   item,
   onClose,
+  refreshAction,
 }: ObjectiveFormModalProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
   const form = useForm<FormValues>({
@@ -86,7 +77,6 @@ export function ObjectiveFormModal({
       groupId: values.groupId,
       title: values.title,
       description: values.description.trim() || null,
-      status: values.status,
       periodStart: values.periodStart || null,
       periodEnd: values.periodEnd || null,
     };
@@ -122,7 +112,7 @@ export function ObjectiveFormModal({
 
     notifications.show({ color: "green", message: result.success });
     onClose();
-    router.refresh();
+    refreshAction();
   }
 
   async function handleDelete(): Promise<void> {
@@ -145,7 +135,7 @@ export function ObjectiveFormModal({
     notifications.show({ color: "green", message: result.success });
     setConfirmDeleteOpened(false);
     onClose();
-    router.refresh();
+    refreshAction();
   }
 
   return (
@@ -175,7 +165,6 @@ export function ObjectiveFormModal({
               data={groups.map((group) => ({ value: group.id, label: group.name }))}
               {...form.getInputProps("groupId")}
             />
-            <Select label="Stato" data={STATUS_OPTIONS} {...form.getInputProps("status")} />
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
               <TextInput
                 label="Inizio periodo"

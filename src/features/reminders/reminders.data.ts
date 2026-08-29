@@ -16,7 +16,7 @@ import {
 import type { Reminder, ReminderPerson } from "./reminders.types";
 
 const reminderColumns =
-  "id, sector_id, group_id, title, description, due_at, due_all_day, status, priority, created_by, created_at, updated_at";
+  "id, sector_id, group_id, title, description, due_at, due_all_day, status, completed_at, completed_late, priority, created_by, created_at, updated_at";
 
 function databaseReadError(label: string, error: { code?: string; message: string }): never {
   console.error(`${label} query failed.`, { code: error.code, message: error.message });
@@ -89,7 +89,7 @@ export async function getReminderAssigneeOptions(
 export async function getVisibleReminders(
   sectorId: string,
   scopedGroupIds: readonly string[] | null,
-  groupNames: ReadonlyMap<string, string>,
+  nodeNames: ReadonlyMap<string, string>,
 ): Promise<readonly Reminder[]> {
   const supabase = await createClient();
   let query = supabase.from("reminders").select(reminderColumns).eq("sector_id", sectorId);
@@ -175,7 +175,9 @@ export async function getVisibleReminders(
 
   return parsedReminders.data.map((reminder) => ({
     ...reminder,
-    groupName: reminder.groupId ? (groupNames.get(reminder.groupId) ?? "Gruppo") : null,
+    groupName: reminder.groupId
+      ? (nodeNames.get(reminder.groupId) ?? "Voce della struttura")
+      : null,
     assignees: assigneesByReminder.get(reminder.id) ?? [],
   }));
 }

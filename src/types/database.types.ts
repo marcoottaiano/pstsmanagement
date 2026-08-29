@@ -71,7 +71,6 @@ export type Database = {
           id: string;
           is_archived: boolean;
           name: string;
-          node_type: string;
           parent_id: string | null;
           sector_id: string;
           sort_order: number;
@@ -82,7 +81,6 @@ export type Database = {
           id?: string;
           is_archived?: boolean;
           name: string;
-          node_type: string;
           parent_id?: string | null;
           sector_id: string;
           sort_order?: number;
@@ -93,7 +91,6 @@ export type Database = {
           id?: string;
           is_archived?: boolean;
           name?: string;
-          node_type?: string;
           parent_id?: string | null;
           sector_id?: string;
           sort_order?: number;
@@ -179,6 +176,8 @@ export type Database = {
       };
       objectives: {
         Row: {
+          completed_at: string | null;
+          completed_late: boolean;
           created_at: string;
           created_by: string | null;
           description: string | null;
@@ -192,6 +191,8 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          completed_at?: string | null;
+          completed_late?: boolean;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
@@ -205,6 +206,8 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          completed_at?: string | null;
+          completed_late?: boolean;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
@@ -309,6 +312,8 @@ export type Database = {
       };
       reminders: {
         Row: {
+          completed_at: string | null;
+          completed_late: boolean;
           created_at: string;
           created_by: string | null;
           description: string | null;
@@ -323,6 +328,8 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          completed_at?: string | null;
+          completed_late?: boolean;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
@@ -337,6 +344,8 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          completed_at?: string | null;
+          completed_late?: boolean;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
@@ -500,7 +509,6 @@ export type Database = {
           p_group_id: string | null;
           p_priority: string;
           p_sector_id: string;
-          p_status: string;
           p_title: string;
         };
         Returns: string;
@@ -533,7 +541,6 @@ export type Database = {
           p_priority: string;
           p_reminder_id: string;
           p_sector_id: string;
-          p_status: string;
           p_title: string;
         };
         Returns: string;

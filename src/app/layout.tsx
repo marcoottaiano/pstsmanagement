@@ -16,6 +16,7 @@ import { theme } from "@/theme";
 export const metadata: Metadata = {
   title: APP_CONFIG.name,
   description: APP_CONFIG.description,
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
   icons: {
     icon: [{ url: "/psts-logo.png", type: "image/png" }],
     shortcut: "/psts-logo.png",

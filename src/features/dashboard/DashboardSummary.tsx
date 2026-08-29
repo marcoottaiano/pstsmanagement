@@ -12,7 +12,9 @@ import {
 } from "@mantine/core";
 import {
   IconAlertTriangle,
+  IconBell,
   IconCalendarEvent,
+  IconCircleCheck,
   IconClockExclamation,
   IconTargetArrow,
 } from "@tabler/icons-react";
@@ -41,7 +43,7 @@ export function DashboardSummary({ data }: DashboardSummaryProps) {
 
   return (
     <Stack gap="lg">
-      <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }} spacing="md">
+      <SimpleGrid cols={{ base: 1, xs: 2, lg: 3 }} spacing="md">
         <Paper withBorder radius="md" p="md">
           <Group justify="space-between" align="flex-start">
             <div>
@@ -116,6 +118,40 @@ export function DashboardSummary({ data }: DashboardSummaryProps) {
             </div>
             <ThemeIcon color="orange" variant="light" radius="md" size="lg">
               <IconClockExclamation size={20} aria-hidden="true" />
+            </ThemeIcon>
+          </Group>
+        </Paper>
+
+        <Paper withBorder radius="md" p="md">
+          <Group justify="space-between" align="flex-start">
+            <div>
+              <Text c="dimmed" size="sm">
+                Promemoria completati in ritardo
+              </Text>
+              <Title order={2}>{data.lateCompletedReminderCount}</Title>
+              <Text c="dimmed" size="xs">
+                Oltre la scadenza
+              </Text>
+            </div>
+            <ThemeIcon color="orange" variant="light" radius="md" size="lg">
+              <IconBell size={20} aria-hidden="true" />
+            </ThemeIcon>
+          </Group>
+        </Paper>
+
+        <Paper withBorder radius="md" p="md">
+          <Group justify="space-between" align="flex-start">
+            <div>
+              <Text c="dimmed" size="sm">
+                Obiettivi completati in ritardo
+              </Text>
+              <Title order={2}>{data.lateCompletedObjectiveCount}</Title>
+              <Text c="dimmed" size="xs">
+                Oltre la data di fine
+              </Text>
+            </div>
+            <ThemeIcon color="orange" variant="light" radius="md" size="lg">
+              <IconCircleCheck size={20} aria-hidden="true" />
             </ThemeIcon>
           </Group>
         </Paper>

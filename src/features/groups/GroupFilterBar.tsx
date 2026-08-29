@@ -2,7 +2,6 @@
 
 import { Button, Group, Paper, Select, Stack, Text, Title } from "@mantine/core";
 import { IconFilter, IconFilterOff } from "@tabler/icons-react";
-import { useRouter, useSearchParams } from "next/navigation";
 
 import type { Sector } from "@/features/auth/auth.types";
 
@@ -14,6 +13,7 @@ type GroupFilterBarProps = Readonly<{
   sector: Sector;
   filter: GroupFilterContext;
   managementNodes: readonly GroupNode[];
+  selectionAction: (groupId: string | null) => void;
 }>;
 
 function toSelectData(nodes: readonly GroupNode[]) {
@@ -23,9 +23,12 @@ function toSelectData(nodes: readonly GroupNode[]) {
   }));
 }
 
-export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterBarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export function GroupFilterBar({
+  sector,
+  filter,
+  managementNodes,
+  selectionAction,
+}: GroupFilterBarProps) {
   const levels: (readonly GroupNode[])[] = [];
   let parentId: string | null = null;
 
@@ -45,17 +48,7 @@ export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterB
   } while (true);
 
   function setGroupSelection(groupId: string | null): void {
-    const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.set("sector", sector.code);
-    nextParams.delete("groupNotice");
-
-    if (groupId) {
-      nextParams.set("group", groupId);
-    } else {
-      nextParams.delete("group");
-    }
-
-    router.push(`/dashboard?${nextParams.toString()}`);
+    selectionAction(groupId);
   }
 
   return (
@@ -68,7 +61,7 @@ export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterB
               Filtra per gruppo
             </Title>
           </Group>
-          <Group gap="sm" align="end" wrap="wrap">
+          <Group gap="sm" align="end" wrap="wrap" style={{ width: "100%" }}>
             {levels.map((nodes, index) => {
               const selectedAtLevel = filter.selectedPath[index];
               const parentAtPreviousLevel = filter.selectedPath[index - 1];
@@ -76,7 +69,7 @@ export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterB
               return (
                 <Select
                   key={parentAtPreviousLevel?.id ?? "root"}
-                  label={index === 0 ? "Categoria o gruppo" : `Livello ${index + 1}`}
+                  label={index === 0 ? "Gruppo" : `Sottogruppo · livello ${index + 1}`}
                   placeholder="Tutti i gruppi"
                   data={toSelectData(nodes)}
                   value={selectedAtLevel?.id ?? null}
@@ -84,14 +77,14 @@ export function GroupFilterBar({ sector, filter, managementNodes }: GroupFilterB
                     setGroupSelection(value ?? parentAtPreviousLevel?.id ?? null)
                   }
                   clearable
-                  searchable
-                  w={{ base: "100%", xs: 220 }}
+                  w={{ base: "100%", sm: 240 }}
+                  maxDropdownHeight={300}
                 />
               );
             })}
             {filter.nodes.length === 0 ? (
               <Text c="dimmed" size="sm">
-                Non ci sono ancora gruppi. Usa “Gestisci struttura” per creare il primo.
+                Non ci sono ancora gruppi. Usa “Gestisci gruppi” per creare il primo.
               </Text>
             ) : null}
             {filter.selectedNode ? (

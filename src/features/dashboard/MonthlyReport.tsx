@@ -7,6 +7,8 @@ import type { Objective } from "@/features/objectives/objectives.types";
 import type { Reminder } from "@/features/reminders/reminders.types";
 import type { ScheduledWorkCalendarItem } from "@/features/scheduled-work/scheduled-work.types";
 
+import { formatCompletionDateTime } from "./completion";
+
 type MonthlyReportProps = Readonly<{
   sectorName: string;
   groupName: string | null;
@@ -16,16 +18,18 @@ type MonthlyReportProps = Readonly<{
   objectives: readonly Objective[];
 }>;
 
-function getObjectiveStatus(status: Objective["status"]): string {
-  switch (status) {
+function getObjectiveStatus(objective: Objective): string {
+  if (objective.completedLate) {
+    return "Completato in ritardo";
+  }
+
+  switch (objective.status) {
     case "NOT_STARTED":
       return "Non iniziato";
     case "IN_PROGRESS":
       return "In corso";
     case "COMPLETED":
       return "Completato";
-    case "POSTPONED":
-      return "Rimandato";
   }
 }
 
@@ -93,12 +97,24 @@ export function MonthlyReport({
         </Button>
       </Group>
 
-      <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="md">
+      <SimpleGrid cols={{ base: 1, xs: 2, lg: 5 }} spacing="md">
         <Paper withBorder p="md">
           <Text c="dimmed" size="sm">
             Attivita programmate
           </Text>
           <Title order={2}>{scheduledWork.length}</Title>
+        </Paper>
+        <Paper withBorder p="md">
+          <Text c="dimmed" size="sm">
+            Obiettivi completati in ritardo
+          </Text>
+          <Title order={2}>{objectives.filter((item) => item.completedLate).length}</Title>
+        </Paper>
+        <Paper withBorder p="md">
+          <Text c="dimmed" size="sm">
+            Promemoria completati in ritardo
+          </Text>
+          <Title order={2}>{reminders.filter((item) => item.completedLate).length}</Title>
         </Paper>
         <Paper withBorder p="md">
           <Text c="dimmed" size="sm">
@@ -129,7 +145,7 @@ export function MonthlyReport({
         items={reminders.map((item) => ({
           id: item.id,
           title: item.title,
-          detail: `${item.groupName ?? "Generale"} | ${item.status === "OPEN" ? "Aperto" : "Completato"}`,
+          detail: `${item.groupName ?? "Generale"} | ${item.status === "OPEN" ? "Aperto" : `${item.completedLate ? "Completato in ritardo" : "Completato"}${item.completedAt ? ` il ${formatCompletionDateTime(item.completedAt)}` : ""}`}`,
         }))}
       />
       <ReportList
@@ -137,7 +153,7 @@ export function MonthlyReport({
         items={objectives.map((item) => ({
           id: item.id,
           title: item.title,
-          detail: `${item.groupName} | ${getObjectiveStatus(item.status)}`,
+          detail: `${item.groupName} | ${getObjectiveStatus(item)}${item.completedAt ? ` il ${formatCompletionDateTime(item.completedAt)}` : ""}`,
         }))}
       />
     </Stack>

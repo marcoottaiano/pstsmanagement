@@ -4,23 +4,13 @@ import { redirect } from "next/navigation";
 
 import { APP_CONFIG } from "@/config/app.config";
 import { getAuthenticatedContext } from "@/features/auth/auth.data";
-import type { Sector } from "@/features/auth/auth.types";
 import { AccessNotConfigured } from "@/features/dashboard/AccessNotConfigured";
+import { getDashboardData } from "@/features/dashboard/dashboard.data";
 import { DashboardHeader } from "@/features/dashboard/DashboardHeader";
 import { DashboardShell } from "@/features/dashboard/DashboardShell";
-import { getGroupNodes, resolveGroupFilter } from "@/features/groups/groups.data";
-import type { GroupFilterContext, GroupNode } from "@/features/groups/groups.types";
-import { getObjectivesForScope } from "@/features/objectives/objectives.data";
-import {
-  getReminderAssigneeOptions,
-  getVisibleReminders,
-} from "@/features/reminders/reminders.data";
-import { getScheduledWorkForVisibleRange } from "@/features/scheduled-work/scheduled-work.data";
-import {
-  getTodayInRome,
-  getVisibleMonthRange,
-  isValidCalendarDate,
-} from "@/features/scheduled-work/scheduled-work.dates";
+import { getGroupNodes } from "@/features/groups/groups.data";
+import type { GroupFilterContext } from "@/features/groups/groups.types";
+import { getTodayInRome } from "@/features/scheduled-work/scheduled-work.dates";
 
 export const metadata: Metadata = {
   title: APP_CONFIG.name,
@@ -30,61 +20,21 @@ type DashboardPageProps = Readonly<{
   searchParams: Promise<{
     sector?: string | string[];
     selection?: string | string[];
-    group?: string | string[];
-    groupNotice?: string | string[];
-    date?: string | string[];
   }>;
 }>;
 
-async function getDashboardData(
-  sector: Sector,
-  groupFilter: GroupFilterContext,
-  calendarDate: string,
-) {
-  const selectableGroups = groupFilter.nodes.filter(
-    (node): node is GroupNode =>
-      node.nodeType === "GROUP" &&
-      (!groupFilter.selectedNode || groupFilter.scopeGroupIds.includes(node.id)),
-  );
-  const range = getVisibleMonthRange(calendarDate);
-  const scopeGroupIds = selectableGroups.map((group) => group.id);
-  const groupNames = new Map(
-    groupFilter.nodes
-      .filter((node) => node.nodeType === "GROUP")
-      .map((group) => [group.id, group.name]),
-  );
-  const [scheduledWork, reminders, assigneeOptions, objectives] = await Promise.all([
-    getScheduledWorkForVisibleRange(
-      sector.id,
-      scopeGroupIds,
-      range.startAt,
-      range.endAt,
-      groupNames,
-    ),
-    getVisibleReminders(
-      sector.id,
-      groupFilter.selectedNode ? groupFilter.scopeGroupIds : null,
-      groupNames,
-    ),
-    getReminderAssigneeOptions(sector.id),
-    getObjectivesForScope(sector.id, scopeGroupIds, groupNames),
-  ]);
-
-  return {
-    selectableGroups,
-    scheduledWork,
-    reminders,
-    assigneeOptions,
-    objectives,
-  };
+function getReadyDashboardUrl(sectorCode: string): string {
+  return `/dashboard?sector=${sectorCode}`;
 }
 
-function getReadyDashboardUrl(sectorCode: string, calendarDate: string, groupId?: string): string {
-  const params = new URLSearchParams({ sector: sectorCode, date: calendarDate });
-  if (groupId) {
-    params.set("group", groupId);
-  }
-  return `/dashboard?${params.toString()}`;
+function createEmptyGroupFilter(nodes: GroupFilterContext["nodes"]): GroupFilterContext {
+  return {
+    nodes,
+    selectedNode: null,
+    selectedPath: [],
+    scopeGroupIds: [],
+    invalidSelection: false,
+  };
 }
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -95,13 +45,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   const requestedSector = typeof query.sector === "string" ? query.sector : undefined;
-  const requestedGroup = typeof query.group === "string" ? query.group : undefined;
-  const requestedDate = typeof query.date === "string" ? query.date : undefined;
-  const calendarDate = isValidCalendarDate(requestedDate) ? requestedDate : getTodayInRome();
-  const dateNeedsCanonicalization = requestedDate !== calendarDate;
+  const calendarDate = getTodayInRome();
   const sectorWasProvided = query.sector !== undefined;
   const selectionError = query.selection === "invalid";
-  const groupNotice = query.groupNotice === "invalid";
 
   if (context.status === "access-not-configured") {
     return (
@@ -122,34 +68,23 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     }
 
     if (requestedSector !== onlySector.code || selectionError) {
-      redirect(getReadyDashboardUrl(onlySector.code, calendarDate));
+      redirect(getReadyDashboardUrl(onlySector.code));
     }
 
-    const [groupFilter, managementNodes] = await Promise.all([
-      resolveGroupFilter(onlySector.id, requestedGroup),
+    const [nodes, managementNodes] = await Promise.all([
+      getGroupNodes(onlySector.id),
       getGroupNodes(onlySector.id, true),
     ]);
-
-    if (groupFilter.invalidSelection) {
-      redirect(`${getReadyDashboardUrl(onlySector.code, calendarDate)}&groupNotice=invalid`);
-    }
-    if (dateNeedsCanonicalization) {
-      redirect(getReadyDashboardUrl(onlySector.code, calendarDate, groupFilter.selectedNode?.id));
-    }
-
+    const groupFilter = createEmptyGroupFilter(nodes);
     const { selectableGroups, scheduledWork, reminders, assigneeOptions, objectives } =
-      await getDashboardData(onlySector, groupFilter, calendarDate);
+      await getDashboardData(onlySector, nodes, calendarDate);
 
     return (
       <main className={`dashboard-page dashboard-page-${onlySector.code}`}>
         <DashboardHeader identity={context.identity} isAdmin={context.isAdmin} />
         <Container className="dashboard-content" py="lg">
-          {groupNotice ? (
-            <p className="dashboard-filter-notice" role="status">
-              Il gruppo richiesto non è disponibile per questo settore. Il filtro è stato rimosso.
-            </p>
-          ) : null}
           <DashboardShell
+            key={onlySector.id}
             activeSector={onlySector}
             groupFilter={groupFilter}
             managementNodes={managementNodes}
@@ -176,28 +111,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       throw new Error("Nessun settore disponibile per l’utente.");
     }
 
-    redirect(getReadyDashboardUrl(defaultSector.code, calendarDate, requestedGroup));
+    redirect(getReadyDashboardUrl(defaultSector.code));
   }
 
   if (sectorWasProvided && !activeSector) {
-    redirect(`/dashboard?selection=invalid&date=${calendarDate}`);
+    redirect("/dashboard?selection=invalid");
   }
 
   if (activeSector) {
-    const [groupFilter, managementNodes] = await Promise.all([
-      resolveGroupFilter(activeSector.id, requestedGroup),
+    const [nodes, managementNodes] = await Promise.all([
+      getGroupNodes(activeSector.id),
       getGroupNodes(activeSector.id, true),
     ]);
-
-    if (groupFilter.invalidSelection) {
-      redirect(`${getReadyDashboardUrl(activeSector.code, calendarDate)}&groupNotice=invalid`);
-    }
-    if (dateNeedsCanonicalization) {
-      redirect(getReadyDashboardUrl(activeSector.code, calendarDate, groupFilter.selectedNode?.id));
-    }
-
+    const groupFilter = createEmptyGroupFilter(nodes);
     const { selectableGroups, scheduledWork, reminders, assigneeOptions, objectives } =
-      await getDashboardData(activeSector, groupFilter, calendarDate);
+      await getDashboardData(activeSector, nodes, calendarDate);
 
     return (
       <main className={`dashboard-page dashboard-page-${activeSector.code}`}>
@@ -206,15 +134,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           isAdmin={context.isAdmin}
           sectors={context.sectors}
           activeSector={activeSector}
-          calendarDate={calendarDate}
         />
         <Container className="dashboard-content" py="lg">
-          {groupNotice ? (
-            <p className="dashboard-filter-notice" role="status">
-              Il gruppo richiesto non è disponibile per questo settore. Il filtro è stato rimosso.
-            </p>
-          ) : null}
           <DashboardShell
+            key={activeSector.id}
             activeSector={activeSector}
             groupFilter={groupFilter}
             managementNodes={managementNodes}
@@ -237,7 +160,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         identity={context.identity}
         isAdmin={context.isAdmin}
         sectors={context.sectors}
-        calendarDate={calendarDate}
       />
       {selectionError ? (
         <Container className="dashboard-content" py="lg">

@@ -5,7 +5,7 @@ import type { GroupFilterContext, GroupNode } from "./groups.types";
 import { getGroupNodePath } from "./groups.utils";
 
 const groupNodeColumns =
-  "id, sector_id, parent_id, name, node_type, sort_order, is_archived, created_at, updated_at";
+  "id, sector_id, parent_id, name, sort_order, is_archived, created_at, updated_at";
 
 function parseGroupNodes(data: unknown): readonly GroupNode[] {
   const parsed = groupNodeDatabaseSchema.array().safeParse(data);

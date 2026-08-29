@@ -347,22 +347,7 @@ Avanzato
 └── Avanzato 3
 ```
 
-There are two kinds of nodes:
-
-```text
-CATEGORY
-GROUP
-```
-
-Example:
-
-```text
-Avanzato → CATEGORY
-Avanzato 1 → GROUP
-Eccellenza 1 → GROUP
-```
-
-Categories such as:
+Top-level groups such as:
 
 ```text
 Base
@@ -370,15 +355,7 @@ Intermedio
 Avanzato
 ```
 
-exist only for organizational purposes.
-
-Categories cannot directly own:
-
-- scheduled work;
-- reminders;
-- objectives.
-
-Groups can own application data.
+are groups like every other node and can directly own application data.
 
 Groups may contain other groups.
 
@@ -413,7 +390,6 @@ id UUID PRIMARY KEY
 sector_id UUID NOT NULL
 parent_id UUID NULL
 name TEXT NOT NULL
-node_type TEXT NOT NULL
 sort_order INTEGER
 is_archived BOOLEAN DEFAULT FALSE
 created_at TIMESTAMPTZ
@@ -421,13 +397,6 @@ updated_at TIMESTAMPTZ
 ```
 
 `parent_id` references another `group_nodes.id`.
-
-Allowed `node_type` values:
-
-```text
-CATEGORY
-GROUP
-```
 
 Every node belongs to exactly one sector.
 
@@ -443,7 +412,7 @@ The UI should remain usable with approximately 3-4 levels.
 
 Filtering must operate recursively.
 
-When a node is selected, the application must determine all descendant GROUP nodes.
+When a group is selected, the application must include that group and all its descendants.
 
 Example:
 
@@ -455,21 +424,6 @@ Resolved scope:
 Avanzato 1
 Eccellenza 1
 Eccellenza 2
-```
-
-If the selected node is a CATEGORY:
-
-```text
-Selected:
-Avanzato
-
-Resolved scope:
-Avanzato 1
-Avanzato 2
-Avanzato 3
-Eccellenza 1
-Eccellenza 2
-...
 ```
 
 This descendant resolution must be centralized.
@@ -641,16 +595,13 @@ The modal must display the hierarchy as a tree.
 
 Required actions:
 
-- create category;
 - create group;
-- create child node;
-- rename node;
-- move node;
+- create subgroup;
+- rename group;
+- move group;
 - reorder siblings;
-- archive node;
-- delete node where allowed.
-
-The tree must visually distinguish categories from groups.
+- archive group;
+- delete group where allowed.
 
 Do not allow circular parent relations.
 
@@ -742,9 +693,7 @@ created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
 
-`group_id` must reference a `GROUP` node.
-
-A scheduled work item cannot be attached directly to a `CATEGORY`.
+`group_id` must reference any active group in the hierarchy.
 
 Future fields can be added later for:
 
@@ -762,16 +711,16 @@ Do not over-model these future requirements during the initial implementation.
 With no group selected:
 
 ```text
-show scheduled work from all GROUP nodes available in the active sector
+show scheduled work from all groups available in the active sector
 ```
 
 With a node selected:
 
 ```text
-show scheduled work belonging to all resolved GROUP nodes in that subtree
+show scheduled work belonging to every resolved group in that subtree
 ```
 
-This includes the selected node itself if it is a GROUP.
+This includes the selected group itself.
 
 ---
 
@@ -815,6 +764,8 @@ title TEXT NOT NULL
 description TEXT
 due_at TIMESTAMPTZ
 status TEXT NOT NULL
+completed_at TIMESTAMPTZ NULL
+completed_late BOOLEAN NOT NULL DEFAULT FALSE
 priority TEXT NULL
 created_by UUID NOT NULL
 created_at TIMESTAMPTZ
@@ -830,7 +781,20 @@ COMPLETED
 
 Keep the initial status model intentionally simple.
 
-A reminder may optionally belong to a group.
+When a reminder is completed, the database stores the completion timestamp and whether it was
+completed after its deadline. For all-day reminders, completion remains on time throughout the due
+date in the `Europe/Rome` timezone. This historical flag remains unchanged while the reminder stays
+completed and is cleared if the reminder is reopened.
+
+An open reminder due today generates one in-app notification per recipient. The notification is
+deduplicated by recipient, reminder and kind, and all-day reminders become overdue only on the next
+calendar day in the `Europe/Rome` timezone.
+
+A reminder may optionally belong to any active group in the shared hierarchy. Scheduled work,
+reminders and objectives all use the same group association model.
+
+A reminder is always created as `OPEN`. Its status is not editable in the create/edit form and may
+change only through the dedicated complete/reopen action.
 
 A reminder without `group_id` is considered general/personal rather than tied to a specific group.
 
@@ -878,7 +842,8 @@ A reminder without `group_id` is personal/general. It is visible only to:
 - its creator;
 - its assignees.
 
-A reminder with `group_id` is sector/group data. When its group belongs to the currently resolved filter scope, it is visible to:
+A reminder with `group_id` is sector/group data. When its group belongs to the currently resolved
+filter scope, it is visible to:
 
 - its creator;
 - its assignees;
@@ -969,6 +934,8 @@ group_id UUID NOT NULL
 title TEXT NOT NULL
 description TEXT
 status TEXT NOT NULL
+completed_at TIMESTAMPTZ NULL
+completed_late BOOLEAN NOT NULL DEFAULT FALSE
 period_start DATE NULL
 period_end DATE NULL
 created_by UUID NOT NULL
@@ -982,12 +949,13 @@ Suggested initial statuses:
 NOT_STARTED
 IN_PROGRESS
 COMPLETED
-POSTPONED
 ```
 
-An objective must always belong to a real `GROUP`.
+The status advances from `NOT_STARTED` to `IN_PROGRESS`, then to `COMPLETED`.
+An objective whose `period_end` has passed is considered overdue without introducing a separate
+status. Completion timestamp and late-completion outcome are stored for historical statistics.
 
-Categories cannot own objectives.
+An objective must always belong to an active group.
 
 ---
 
@@ -997,7 +965,7 @@ The objectives card is located below reminders.
 
 It must NOT be displayed in the general dashboard view.
 
-When no group/category filter is selected:
+When no group filter is selected:
 
 ```text
 Objectives card hidden
@@ -1009,7 +977,7 @@ When a node is selected:
 Objectives card visible
 ```
 
-The card must display objectives from every GROUP contained in the selected subtree.
+The card must display objectives from every group contained in the selected subtree.
 
 Example:
 
@@ -1037,12 +1005,8 @@ Users with sector access may:
 - update status;
 - delete objectives.
 
-When creating an objective while a group filter is active:
-
-- preselect the current group if it is a GROUP;
-- if the current selection is a CATEGORY, require the user to select one of its descendant GROUP nodes.
-
-Never associate an objective with a CATEGORY.
+When creating an objective while a group filter is active, preselect the current group. Any active
+group in the hierarchy is a valid objective owner.
 
 ---
 
@@ -1434,7 +1398,7 @@ Include:
 
 - both sectors;
 - sample users only if technically convenient;
-- sample category tree;
+- sample group tree;
 - sample groups;
 - sample scheduled work;
 - sample reminders;
@@ -1705,7 +1669,7 @@ The first implementation must include:
 
 ## Group management
 
-- category/group hierarchy;
+- group/subgroup hierarchy;
 - create;
 - rename;
 - move/reorder if reasonably implementable;
@@ -1742,7 +1706,7 @@ The first implementation must include:
 ## Objectives
 
 - hidden in general view;
-- visible after group/category selection;
+- visible after group selection;
 - recursive group scope;
 - create;
 - edit;
@@ -1850,7 +1814,7 @@ Exit condition: the clean application passes lint, type-check, tests and product
 1. Configure the Supabase CLI/project link and centralized browser/server clients.
 2. Create reproducible migrations for profiles, sectors and user-sector access.
 3. Create migrations for group nodes, scheduled work, reminders, reminder assignees and objectives, including foreign keys, constraints and indexes.
-4. Add database functions or constraints for cross-table integrity that cannot be expressed with simple foreign keys, including same-sector relationships and GROUP-only ownership.
+4. Add database functions or constraints for cross-table integrity that cannot be expressed with simple foreign keys, including same-sector relationships and archived-group protection.
 5. Add RLS helper functions and policies for every application table.
 6. Add deterministic development seed data and generate TypeScript database types.
 7. Add database-level tests for constraints, recursive scope resolution and denied cross-sector access.
@@ -1869,8 +1833,8 @@ Exit condition: single-sector and dual-sector test users complete the authentica
 
 ## Phase 4 - Group hierarchy and filter scope
 
-1. Implement and test centralized recursive descendant GROUP resolution.
-2. Implement group/category CRUD, archive, safe delete, move and sibling reorder.
+1. Implement and test centralized recursive descendant group resolution.
+2. Implement group/subgroup CRUD, archive, safe delete, move and sibling reorder.
 3. Implement the management tree modal with cycle and cross-sector protections.
 4. Implement progressive selects, reset and URL-backed filter state.
 5. Validate stale or unauthorized URL parameters and fall back safely.
@@ -1885,7 +1849,7 @@ Exit condition: tree mutations and recursive filtering work for arbitrary depth,
 4. Implement create, edit, delete, event click, drag-and-drop and meaningful resize behaviour.
 5. Revert optimistic calendar changes when persistence fails.
 
-Exit condition: scheduled work is correctly scoped, survives refresh and cannot be attached to categories or inaccessible sectors.
+Exit condition: scheduled work is correctly scoped, survives refresh and cannot be attached to archived groups or inaccessible sectors.
 
 ## Phase 6 - Reminders
 
@@ -1901,10 +1865,10 @@ Exit condition: personal, created, assigned and group-scoped reminders follow th
 
 1. Implement objective schemas, queries, mutations and status management.
 2. Hide the panel in general view and load the selected recursive group scope otherwise.
-3. Require a concrete GROUP when the active filter is a CATEGORY.
+3. Preselect the active group while allowing any active group in the hierarchy.
 4. Implement create, edit and safe delete flows.
 
-Exit condition: objectives are never associated with categories and visibility remains consistent with recursive filters and RLS.
+Exit condition: objectives can be associated with any active group and visibility remains consistent with recursive filters and RLS.
 
 ## Phase 8 - MVP hardening and production release
 
@@ -1930,8 +1894,8 @@ The first MVP can be considered complete when:
 - an unauthenticated user cannot access the dashboard;
 - sector access is respected;
 - a user with both sectors can switch between them;
-- groups/categories can be represented as an arbitrary tree;
-- categories cannot own work or objectives;
+- groups can be represented as an arbitrary tree of nested subgroups;
+- every active group can own work, reminders and objectives;
 - the dashboard initially shows all work for the active sector;
 - selecting a tree level filters to all descendant groups;
 - FullCalendar displays scheduled work;
@@ -1941,7 +1905,7 @@ The first MVP can be considered complete when:
 - reminders with deadlines appear in the calendar;
 - reminder filtering behaves correctly;
 - objectives remain hidden in general view;
-- objectives appear when a group/category is selected;
+- objectives appear when a group is selected;
 - objectives include descendants of the selected node;
 - all users with access to a sector can modify sector data;
 - unauthorized sector data cannot be accessed through direct database/API requests;

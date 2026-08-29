@@ -79,15 +79,16 @@ export function getDashboardSummary(
           ? getRomeDayKey(reminder.dueAt) < today
           : dayjs(reminder.dueAt).isBefore(now)),
     ).length,
+    lateCompletedReminderCount: reminders.filter((reminder) => reminder.completedLate).length,
     completedObjectiveCount: objectives.filter((objective) => objective.status === "COMPLETED")
       .length,
+    lateCompletedObjectiveCount: objectives.filter((objective) => objective.completedLate).length,
     totalObjectiveCount: objectives.length,
     lateObjectiveCount: objectives.filter(
       (objective) =>
         objective.periodEnd !== null &&
         objective.periodEnd < today &&
-        objective.status !== "COMPLETED" &&
-        objective.status !== "POSTPONED",
+        objective.status !== "COMPLETED",
     ).length,
     groupWorkloads: getGroupWorkloads(scheduledWorkForCalendar, reminders),
   };

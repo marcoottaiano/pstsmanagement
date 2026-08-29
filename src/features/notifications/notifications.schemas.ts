@@ -5,6 +5,7 @@ const timestampSchema = z.string().datetime({ offset: true });
 
 export const notificationKindSchema = z.enum([
   "REMINDER_ASSIGNED",
+  "REMINDER_DUE_TODAY",
   "REMINDER_DUE_SOON",
   "REMINDER_OVERDUE",
 ]);

@@ -35,7 +35,7 @@ async function canAccessSector(sectorId: string): Promise<boolean> {
   return Boolean(context?.sectors.some((sector) => sector.id === sectorId));
 }
 
-async function isActiveGroupInSector(sectorId: string, groupId: string | null): Promise<boolean> {
+async function isActiveNodeInSector(sectorId: string, groupId: string | null): Promise<boolean> {
   if (!groupId) {
     return true;
   }
@@ -46,7 +46,6 @@ async function isActiveGroupInSector(sectorId: string, groupId: string | null): 
     .select("id")
     .eq("id", groupId)
     .eq("sector_id", sectorId)
-    .eq("node_type", "GROUP")
     .eq("is_archived", false)
     .maybeSingle();
 
@@ -85,7 +84,7 @@ async function canSaveReminder(
   }
 
   const [validGroup, validAssignees] = await Promise.all([
-    isActiveGroupInSector(sectorId, groupId),
+    isActiveNodeInSector(sectorId, groupId),
     assigneesBelongToSector(sectorId, assigneeIds),
   ]);
   return validGroup && validAssignees;
@@ -113,7 +112,6 @@ export async function createReminder(input: CreateReminderInput): Promise<Remind
     p_due_at: parsed.data.dueAt,
     p_due_all_day: parsed.data.dueAllDay,
     p_priority: parsed.data.priority,
-    p_status: parsed.data.status,
     p_assignee_ids: parsed.data.assigneeIds,
   });
 
@@ -144,7 +142,6 @@ export async function updateReminder(input: UpdateReminderInput): Promise<Remind
     p_due_at: parsed.data.dueAt,
     p_due_all_day: parsed.data.dueAllDay,
     p_priority: parsed.data.priority,
-    p_status: parsed.data.status,
     p_assignee_ids: parsed.data.assigneeIds,
   });
 

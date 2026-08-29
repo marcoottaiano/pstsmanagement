@@ -17,6 +17,7 @@ import {
   IconAlertTriangle,
   IconBell,
   IconBellOff,
+  IconCalendarTime,
   IconCheck,
   IconClock,
   IconUserCheck,
@@ -41,6 +42,7 @@ const KIND_PRESENTATION: Record<
   }>
 > = {
   REMINDER_ASSIGNED: { color: "blue", icon: IconUserCheck },
+  REMINDER_DUE_TODAY: { color: "orange", icon: IconCalendarTime },
   REMINDER_DUE_SOON: { color: "orange", icon: IconClock },
   REMINDER_OVERDUE: { color: "red", icon: IconAlertTriangle },
 };
@@ -71,7 +73,6 @@ export function NotificationCenterClient({
 
       setOpened(false);
       router.push(item.href);
-      router.refresh();
     });
   }
 

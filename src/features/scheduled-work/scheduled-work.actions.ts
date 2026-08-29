@@ -40,7 +40,6 @@ async function isActiveGroupInSector(sectorId: string, groupId: string): Promise
     .select("id")
     .eq("id", groupId)
     .eq("sector_id", sectorId)
-    .eq("node_type", "GROUP")
     .eq("is_archived", false)
     .maybeSingle();
 

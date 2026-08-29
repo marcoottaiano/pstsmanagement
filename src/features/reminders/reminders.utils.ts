@@ -44,7 +44,7 @@ function compareCompletedReminders(
   return (
     Number(isAssignedTo(second, currentUserId)) - Number(isAssignedTo(first, currentUserId)) ||
     PRIORITY_RANK[first.priority] - PRIORITY_RANK[second.priority] ||
-    second.updatedAt.localeCompare(first.updatedAt)
+    (second.completedAt ?? second.updatedAt).localeCompare(first.completedAt ?? first.updatedAt)
   );
 }
 

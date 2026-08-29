@@ -53,7 +53,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const nodes = await getGroupNodes(authorization.sector.id);
-  const groups = nodes.filter((node) => node.nodeType === "GROUP");
+  const groups = nodes;
   const allowedGroupIds = new Set(groups.map((group) => group.id));
   const selectedGroupIds = parsed.data.groups.filter((groupId) => allowedGroupIds.has(groupId));
   const groupIds = selectedGroupIds.length > 0 ? selectedGroupIds : groups.map((group) => group.id);

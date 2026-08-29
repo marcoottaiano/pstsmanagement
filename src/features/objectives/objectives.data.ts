@@ -4,7 +4,7 @@ import { objectiveDatabaseSchema } from "./objectives.schemas";
 import type { Objective } from "./objectives.types";
 
 const objectiveColumns =
-  "id, sector_id, group_id, title, description, status, period_start, period_end, created_by, created_at, updated_at";
+  "id, sector_id, group_id, title, description, status, completed_at, completed_late, period_start, period_end, created_by, created_at, updated_at";
 
 export async function getObjectivesForScope(
   sectorId: string,

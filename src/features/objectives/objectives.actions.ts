@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createObjectiveSchema,
   deleteObjectiveSchema,
+  objectiveStatusSchema,
   updateObjectiveSchema,
   updateObjectiveStatusSchema,
 } from "./objectives.schemas";
@@ -40,7 +41,6 @@ async function isActiveGroupInSector(sectorId: string, groupId: string): Promise
     .select("id")
     .eq("id", groupId)
     .eq("sector_id", sectorId)
-    .eq("node_type", "GROUP")
     .eq("is_archived", false)
     .maybeSingle();
 
@@ -67,7 +67,6 @@ export async function createObjective(input: CreateObjectiveInput): Promise<Obje
     group_id: parsed.data.groupId,
     title: parsed.data.title,
     description: parsed.data.description,
-    status: parsed.data.status,
     period_start: parsed.data.periodStart,
     period_end: parsed.data.periodEnd,
   });
@@ -93,7 +92,6 @@ export async function updateObjective(input: UpdateObjectiveInput): Promise<Obje
       group_id: parsed.data.groupId,
       title: parsed.data.title,
       description: parsed.data.description,
-      status: parsed.data.status,
       period_start: parsed.data.periodStart,
       period_end: parsed.data.periodEnd,
     })
@@ -122,11 +120,39 @@ export async function updateObjectiveStatus(
   }
 
   const supabase = await createClient();
+  const { data: currentObjective, error: currentObjectiveError } = await supabase
+    .from("objectives")
+    .select("status")
+    .eq("id", parsed.data.id)
+    .eq("sector_id", parsed.data.sectorId)
+    .maybeSingle();
+
+  if (currentObjectiveError) {
+    return databaseErrorResult(currentObjectiveError);
+  }
+  if (!currentObjective) {
+    return { error: "L'obiettivo non è disponibile o non è autorizzato." };
+  }
+
+  const currentStatus = objectiveStatusSchema.safeParse(currentObjective.status);
+  if (!currentStatus.success) {
+    return { error: "Lo stato attuale dell'obiettivo non è valido." };
+  }
+
+  const validTransition =
+    (currentStatus.data === "NOT_STARTED" && parsed.data.status === "IN_PROGRESS") ||
+    (currentStatus.data === "IN_PROGRESS" && parsed.data.status === "COMPLETED") ||
+    (currentStatus.data === "COMPLETED" && parsed.data.status === "IN_PROGRESS");
+  if (!validTransition) {
+    return { error: "Il passaggio di stato richiesto non è consentito." };
+  }
+
   const { data, error } = await supabase
     .from("objectives")
     .update({ status: parsed.data.status })
     .eq("id", parsed.data.id)
     .eq("sector_id", parsed.data.sectorId)
+    .eq("status", currentStatus.data)
     .select("id")
     .maybeSingle();
 
@@ -138,7 +164,13 @@ export async function updateObjectiveStatus(
   }
 
   revalidateDashboard();
-  return { success: "Stato dell'obiettivo aggiornato." };
+  const success =
+    parsed.data.status === "IN_PROGRESS"
+      ? currentStatus.data === "COMPLETED"
+        ? "Obiettivo riaperto."
+        : "Obiettivo avviato."
+      : "Obiettivo completato.";
+  return { success };
 }
 
 export async function deleteObjective(input: DeleteObjectiveInput): Promise<ObjectiveActionResult> {

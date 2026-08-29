@@ -1,13 +1,10 @@
 import { z } from "zod";
 
-export const groupNodeTypeSchema = z.enum(["CATEGORY", "GROUP"]);
-
 export const groupNodeSchema = z.object({
   id: z.string().uuid(),
   sectorId: z.string().uuid(),
   parentId: z.string().uuid().nullable(),
   name: z.string().min(1),
-  nodeType: groupNodeTypeSchema,
   sortOrder: z.number().int().nonnegative(),
   isArchived: z.boolean(),
   createdAt: z.string().datetime({ offset: true }),
@@ -20,7 +17,6 @@ export const groupNodeDatabaseSchema = z
     sector_id: z.string().uuid(),
     parent_id: z.string().uuid().nullable(),
     name: z.string().min(1),
-    node_type: groupNodeTypeSchema,
     sort_order: z.number().int().nonnegative(),
     is_archived: z.boolean(),
     created_at: z.string().datetime({ offset: true }),
@@ -31,7 +27,6 @@ export const groupNodeDatabaseSchema = z
     sectorId: node.sector_id,
     parentId: node.parent_id,
     name: node.name,
-    nodeType: node.node_type,
     sortOrder: node.sort_order,
     isArchived: node.is_archived,
     createdAt: node.created_at,
@@ -49,7 +44,6 @@ export const createGroupNodeSchema = z.object({
   sectorId: groupNodeIdSchema,
   parentId: groupNodeIdSchema.nullable(),
   name: groupNameSchema,
-  nodeType: groupNodeTypeSchema,
 });
 
 export const renameGroupNodeSchema = z.object({

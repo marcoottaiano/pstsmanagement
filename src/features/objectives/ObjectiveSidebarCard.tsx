@@ -19,16 +19,16 @@ import {
   IconCheck,
   IconCircleCheck,
   IconCircleDashed,
-  IconClockPause,
+  IconClockExclamation,
   IconPlayerPlay,
   IconPlus,
   IconRotateClockwise,
   IconTargetArrow,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 
+import { formatCompletionDateTime } from "@/features/dashboard/completion";
 import type { GroupNode } from "@/features/groups/groups.types";
 import { celebrateFromElement } from "@/lib/celebration";
 
@@ -38,6 +38,7 @@ import type { Objective, ObjectiveStatus } from "./objectives.types";
 import {
   formatObjectivePeriod,
   getObjectiveSections,
+  type ObjectiveSectionKey,
   OBJECTIVE_STATUS_PRESENTATION,
 } from "./objectives.utils";
 
@@ -46,24 +47,25 @@ type ObjectiveSidebarCardProps = Readonly<{
   objectives: readonly Objective[];
   groups: readonly GroupNode[];
   preferredGroupId: string | null;
+  refreshAction: () => void;
 }>;
 
 type ModalState = Readonly<{ item: Objective | null; key: string }>;
 
 const OBJECTIVE_STATUS_ICONS = {
+  OVERDUE: IconClockExclamation,
   NOT_STARTED: IconCircleDashed,
   IN_PROGRESS: IconPlayerPlay,
-  POSTPONED: IconClockPause,
   COMPLETED: IconCircleCheck,
-} satisfies Record<ObjectiveStatus, typeof IconTargetArrow>;
+} satisfies Record<ObjectiveSectionKey, typeof IconTargetArrow>;
 
 export function ObjectiveSidebarCard({
   sectorId,
   objectives,
   groups,
   preferredGroupId,
+  refreshAction,
 }: ObjectiveSidebarCardProps) {
-  const router = useRouter();
   const [modalState, setModalState] = useState<ModalState | null>(null);
   const [pendingObjectiveId, setPendingObjectiveId] = useState<string | null>(null);
   const sections = getObjectiveSections(objectives);
@@ -73,8 +75,13 @@ export function ObjectiveSidebarCard({
     event: MouseEvent<HTMLButtonElement>,
   ): Promise<void> {
     const button = event.currentTarget;
-    const completing = objective.status !== "COMPLETED";
-    const nextStatus = objective.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
+    const nextStatus: ObjectiveStatus =
+      objective.status === "NOT_STARTED"
+        ? "IN_PROGRESS"
+        : objective.status === "IN_PROGRESS"
+          ? "COMPLETED"
+          : "IN_PROGRESS";
+    const completing = nextStatus === "COMPLETED";
     setPendingObjectiveId(objective.id);
     const result = await updateObjectiveStatus({ id: objective.id, sectorId, status: nextStatus });
     setPendingObjectiveId(null);
@@ -86,7 +93,7 @@ export function ObjectiveSidebarCard({
       celebrateFromElement(button);
     }
     notifications.show({ color: "green", message: result.success });
-    router.refresh();
+    refreshAction();
   }
 
   return (
@@ -134,17 +141,17 @@ export function ObjectiveSidebarCard({
           <Accordion
             multiple
             defaultValue={sections
-              .filter((section) => section.status !== "COMPLETED")
-              .map((section) => section.status)}
+              .filter((section) => section.key !== "COMPLETED")
+              .map((section) => section.key)}
             variant="default"
             radius="sm"
           >
             {sections.map((section) => {
-              const presentation = OBJECTIVE_STATUS_PRESENTATION[section.status];
-              const StatusIcon = OBJECTIVE_STATUS_ICONS[section.status];
+              const presentation = OBJECTIVE_STATUS_PRESENTATION[section.key];
+              const StatusIcon = OBJECTIVE_STATUS_ICONS[section.key];
 
               return (
-                <Accordion.Item key={section.status} value={section.status}>
+                <Accordion.Item key={section.key} value={section.key}>
                   <Accordion.Control>
                     <Group justify="space-between" pr="sm">
                       <Group gap="xs" wrap="nowrap">
@@ -183,12 +190,31 @@ export function ObjectiveSidebarCard({
                                   <Text fw={650} size="sm">
                                     {objective.title}
                                   </Text>
+                                  {objective.completedLate ? (
+                                    <Badge color="orange" variant="light" size="xs">
+                                      Completato in ritardo
+                                    </Badge>
+                                  ) : null}
                                   <Text c="dimmed" size="xs">
                                     {objective.groupName} · {formatObjectivePeriod(objective)}
                                   </Text>
+                                  {objective.completedAt ? (
+                                    <Text c="dimmed" size="xs">
+                                      Completato il{" "}
+                                      {formatCompletionDateTime(objective.completedAt)}
+                                    </Text>
+                                  ) : null}
                                 </Stack>
                               </UnstyledButton>
-                              <Tooltip label={completed ? "Riapri" : "Completa"}>
+                              <Tooltip
+                                label={
+                                  completed
+                                    ? "Riapri"
+                                    : objective.status === "NOT_STARTED"
+                                      ? "Avvia"
+                                      : "Completa"
+                                }
+                              >
                                 <ActionIcon
                                   variant={completed ? "light" : "filled"}
                                   color={completed ? "gray" : "teal"}
@@ -197,11 +223,15 @@ export function ObjectiveSidebarCard({
                                   aria-label={
                                     completed
                                       ? `Riapri ${objective.title}`
-                                      : `Completa ${objective.title}`
+                                      : objective.status === "NOT_STARTED"
+                                        ? `Avvia ${objective.title}`
+                                        : `Completa ${objective.title}`
                                   }
                                 >
                                   {completed ? (
                                     <IconRotateClockwise size={16} aria-hidden="true" />
+                                  ) : objective.status === "NOT_STARTED" ? (
+                                    <IconPlayerPlay size={16} aria-hidden="true" />
                                   ) : (
                                     <IconCheck size={16} aria-hidden="true" />
                                   )}
@@ -233,6 +263,7 @@ export function ObjectiveSidebarCard({
           preferredGroupId={preferredGroupId}
           item={modalState.item}
           onClose={() => setModalState(null)}
+          refreshAction={refreshAction}
         />
       ) : null}
     </Paper>

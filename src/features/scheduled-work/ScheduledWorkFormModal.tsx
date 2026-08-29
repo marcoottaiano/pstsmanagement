@@ -14,7 +14,6 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { GroupNode } from "@/features/groups/groups.types";
@@ -49,6 +48,7 @@ type ScheduledWorkFormModalProps = Readonly<{
   item: ScheduledWorkCalendarItem | null;
   preset: ScheduledWorkPreset;
   onClose: () => void;
+  refreshAction: () => void;
 }>;
 
 type FormValues = {
@@ -123,8 +123,8 @@ export function ScheduledWorkFormModal({
   item,
   preset,
   onClose,
+  refreshAction,
 }: ScheduledWorkFormModalProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
   const form = useForm<FormValues>({
@@ -195,7 +195,7 @@ export function ScheduledWorkFormModal({
 
     notifications.show({ color: "green", message: result.success });
     onClose();
-    router.refresh();
+    refreshAction();
   }
 
   async function handleDelete(): Promise<void> {
@@ -219,7 +219,7 @@ export function ScheduledWorkFormModal({
     notifications.show({ color: "green", message: result.success });
     setConfirmDeleteOpened(false);
     onClose();
-    router.refresh();
+    refreshAction();
   }
 
   const allDay = form.values.allDay;
@@ -229,8 +229,7 @@ export function ScheduledWorkFormModal({
     form.values.groupId.length > 0 &&
     form.values.startDate.length > 0 &&
     (allDay || form.values.startTime.length > 0) &&
-    (!hasEnd ||
-      (form.values.endDate.length > 0 && (allDay || form.values.endTime.length > 0)));
+    (!hasEnd || (form.values.endDate.length > 0 && (allDay || form.values.endTime.length > 0)));
 
   return (
     <>

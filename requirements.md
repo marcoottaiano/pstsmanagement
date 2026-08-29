@@ -37,17 +37,13 @@ Avanzato
 └── Avanzato 3
 ```
 
-I livelli principali, come:
+Tutti gli elementi della struttura, compresi i livelli principali come:
 
 - Base;
 - Intermedio;
 - Avanzato;
 
-avranno esclusivamente una funzione organizzativa e non saranno considerati gruppi effettivi.
-
-Questi elementi fungeranno da categorie o contenitori all’interno dei quali saranno organizzati i gruppi reali.
-
-Saranno invece considerati gruppi effettivi elementi come:
+saranno gruppi a tutti gli effetti e potranno contenere sottogruppi come:
 
 - Avanzato 1;
 - Avanzato 2;
@@ -55,7 +51,7 @@ Saranno invece considerati gruppi effettivi elementi come:
 - Eccellenza 1;
 - Eccellenza 2.
 
-Un gruppo effettivo potrà quindi contenere ulteriori sottogruppi.
+Ogni gruppo potrà contenere ulteriori sottogruppi senza una distinzione di tipo fra i livelli.
 
 ## 4. Barra dei filtri
 
@@ -75,7 +71,7 @@ La selezione di un elemento padre comporterà automaticamente la visualizzazione
 
 Ad esempio:
 
-- selezionando `Avanzato`, saranno mostrati i contenuti di tutti i gruppi appartenenti alla categoria Avanzato;
+- selezionando `Avanzato`, saranno mostrati i contenuti associati direttamente ad Avanzato e a tutti i suoi sottogruppi;
 - selezionando `Avanzato 1`, saranno mostrati i contenuti di Avanzato 1 e dei suoi eventuali sottogruppi;
 - selezionando `Eccellenza 1`, saranno mostrati esclusivamente i contenuti relativi a Eccellenza 1.
 
@@ -93,7 +89,7 @@ Nella vista generale:
 
 - saranno mostrati i lavori di tutti i gruppi;
 - saranno mostrati i promemoria rilevanti per l’utente;
-- non sarà mostrata la card degli obiettivi, poiché gli obiettivi saranno consultabili solo dopo aver selezionato un gruppo o una categoria di gruppi.
+- non sarà mostrata la card degli obiettivi, poiché gli obiettivi saranno consultabili solo dopo aver selezionato un gruppo.
 
 ## 6. Calendario
 
@@ -120,7 +116,7 @@ I contenuti del calendario verranno aggiornati automaticamente quando l’utente
 
 Quando non è selezionato alcun gruppo, il calendario mostrerà i lavori di tutti i gruppi accessibili.
 
-Quando viene selezionata una categoria o un gruppo, il calendario mostrerà solamente i contenuti appartenenti:
+Quando viene selezionato un gruppo, il calendario mostrerà solamente i contenuti appartenenti:
 
 - al gruppo selezionato;
 - agli eventuali sottogruppi inclusi al suo interno.
@@ -143,7 +139,7 @@ Alla destra del calendario sarà presente una colonna composta da due card:
 
 La card dei promemoria sarà sempre disponibile.
 
-La card degli obiettivi verrà invece mostrata solamente quando l’utente avrà selezionato un gruppo o una categoria dalla barra dei filtri.
+La card degli obiettivi verrà invece mostrata solamente quando l’utente avrà selezionato un gruppo dalla barra dei filtri.
 
 ## 9. Card dei promemoria
 
@@ -179,7 +175,7 @@ Sotto alla card dei promemoria sarà presente una card dedicata agli obiettivi.
 
 La card degli obiettivi non verrà mostrata nella vista generale.
 
-Sarà invece visualizzata quando l’utente selezionerà una categoria o un gruppo dalla barra dei filtri.
+Sarà invece visualizzata quando l’utente selezionerà un gruppo dalla barra dei filtri.
 
 La card dovrà mostrare gli obiettivi associati:
 
@@ -213,21 +209,16 @@ Il pulsante aprirà una finestra contenente una visualizzazione ad albero.
 
 Da questa finestra sarà possibile:
 
-- creare una categoria principale;
-- creare un gruppo;
+- creare un gruppo principale;
 - aggiungere un sottogruppo;
-- modificare il nome di un elemento;
+- modificare il nome di un gruppo;
 - spostare un gruppo all’interno della struttura;
-- riordinare gli elementi;
+- riordinare i gruppi;
 - archiviare un gruppo;
-- eliminare un elemento, quando consentito.
+- eliminare un gruppo, quando consentito.
 
-La piattaforma dovrà distinguere chiaramente tra:
-
-- categorie organizzative, come Base, Intermedio e Avanzato;
-- gruppi effettivi, ai quali possono essere associati lavori, promemoria e obiettivi.
-
-Le categorie organizzative non dovranno contenere direttamente lavori o obiettivi, ma serviranno esclusivamente a raggruppare i gruppi sottostanti.
+Ogni elemento dell’albero è un gruppo, può contenere sottogruppi e può essere associato direttamente
+a lavori, promemoria e obiettivi.
 
 ## 12. Regole di visualizzazione
 
@@ -238,12 +229,6 @@ Il comportamento complessivo della pagina dovrà seguire queste regole:
 - calendario con i lavori di tutti i gruppi;
 - promemoria visibili nella colonna laterale;
 - card degli obiettivi non visibile.
-
-### Categoria organizzativa selezionata
-
-- calendario filtrato su tutti i gruppi contenuti nella categoria;
-- promemoria filtrati sui gruppi contenuti;
-- obiettivi di tutti i gruppi e sottogruppi contenuti.
 
 ### Gruppo selezionato
 
@@ -262,7 +247,7 @@ Il comportamento complessivo della pagina dovrà seguire queste regole:
 La pagina principale dovrà permettere all’utente di passare rapidamente:
 
 - da una visione generale di tutti i lavori;
-- alla programmazione di una categoria;
+- alla programmazione di un gruppo e dei suoi sottogruppi;
 - alla gestione dettagliata di un singolo gruppo;
 - alla consultazione degli obiettivi dei relativi sottogruppi.
 

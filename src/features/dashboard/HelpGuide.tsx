@@ -16,13 +16,13 @@ const GUIDE_STEPS = [
     title: "Gruppi",
     icon: IconListTree,
     canDo: [
-      "Creare categorie e gruppi organizzati su più livelli.",
-      "Spostare, riordinare, archiviare e ripristinare gli elementi della struttura.",
+      "Creare gruppi e sottogruppi organizzati su più livelli.",
+      "Spostare, riordinare, archiviare e ripristinare i gruppi della struttura.",
       "Filtrare tutta la dashboard includendo automaticamente i gruppi discendenti.",
     ],
     howTo: [
-      "Apri “Gestisci struttura” per creare o modificare categorie e gruppi.",
-      "Usa i menu “Categoria o gruppo” e “Livello” per restringere la dashboard.",
+      "Apri “Gestisci gruppi” per creare o modificare gruppi e sottogruppi.",
+      "Usa i menu “Gruppo” e “Sottogruppo” per restringere la dashboard.",
       "Premi “Azzera filtro” per tornare alla vista generale del settore.",
     ],
   },
@@ -58,12 +58,12 @@ const GUIDE_STEPS = [
     title: "Obiettivi",
     icon: IconTargetArrow,
     canDo: [
-      "Definire obiettivi per un gruppo concreto, con stato e periodo opzionale.",
+      "Definire obiettivi per qualunque gruppo, con stato e periodo opzionale.",
       "Visualizzare anche gli obiettivi dei gruppi discendenti.",
       "Aggiornare lo stato oppure completare e riaprire un obiettivo.",
     ],
     howTo: [
-      "Seleziona prima un gruppo o una categoria: gli obiettivi sono nascosti nella vista generale.",
+      "Seleziona prima un gruppo: gli obiettivi sono nascosti nella vista generale.",
       "Premi “Nuovo” e scegli il gruppo a cui associare l’obiettivo.",
       "Clicca la card per modificarla oppure usa la spunta per completarla.",
     ],

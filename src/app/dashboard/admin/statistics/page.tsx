@@ -61,10 +61,8 @@ function isWithinMonth(value: string | null, rangeStartAt: string, rangeEndAt: s
 
 async function getSectorStatistics(sectorId: string): Promise<SectorStatistics> {
   const groups = await getGroupNodes(sectorId);
-  const groupIds = groups.filter((group) => group.nodeType === "GROUP").map((group) => group.id);
-  const groupNames = new Map(
-    groups.filter((group) => group.nodeType === "GROUP").map((group) => [group.id, group.name]),
-  );
+  const groupIds = groups.map((group) => group.id);
+  const groupNames = new Map(groups.map((group) => [group.id, group.name]));
   const monthRange = getVisibleMonthRange(getTodayInRome());
   const upcomingRange = getUpcomingWeekRange();
   const [scheduledWork, upcomingWork, reminders, objectives] = await Promise.all([
@@ -112,7 +110,7 @@ export default async function AdminStatisticsPage({ searchParams }: AdminStatist
     ? getSearchValue(query.month)
     : getTodayInRome().slice(0, 7);
   const nodes = await getGroupNodes(activeSector.id);
-  const groups = nodes.filter((node) => node.nodeType === "GROUP");
+  const groups = nodes;
   const requestedGroupId = getSearchValue(query.group);
   const selectedGroup = groups.find((group) => group.id === requestedGroupId);
   const reportGroupIds = selectedGroup ? [selectedGroup.id] : groups.map((group) => group.id);

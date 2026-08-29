@@ -68,7 +68,6 @@ export async function createGroupNode(input: CreateGroupNodeInput): Promise<Grou
     sector_id: parsed.data.sectorId,
     parent_id: parsed.data.parentId,
     name: parsed.data.name,
-    node_type: parsed.data.nodeType,
     sort_order: (lastSiblings[0]?.sort_order ?? -1) + 1,
   });
 
@@ -77,7 +76,7 @@ export async function createGroupNode(input: CreateGroupNodeInput): Promise<Grou
   }
 
   revalidateDashboard();
-  return { success: "Nodo creato." };
+  return { success: "Gruppo creato." };
 }
 
 export async function renameGroupNode(input: RenameGroupNodeInput): Promise<GroupActionResult> {
@@ -119,7 +118,7 @@ export async function moveGroupNode(input: MoveGroupNodeInput): Promise<GroupAct
   }
 
   revalidateDashboard();
-  return { success: "Nodo spostato." };
+  return { success: "Gruppo spostato." };
 }
 
 export async function reorderGroupNode(input: ReorderGroupNodeInput): Promise<GroupActionResult> {
@@ -162,7 +161,9 @@ export async function setGroupSubtreeArchiveState(
 
   revalidateDashboard();
   return {
-    success: parsed.data.archived ? "Sottoalbero archiviato." : "Sottoalbero ripristinato.",
+    success: parsed.data.archived
+      ? "Gruppo e sottogruppi archiviati."
+      : "Gruppo e sottogruppi ripristinati.",
   };
 }
 
@@ -203,7 +204,9 @@ export async function deleteGroupNode(input: DeleteGroupNodeInput): Promise<Grou
     (reminders.count ?? 0) > 0 ||
     (objectives.count ?? 0) > 0
   ) {
-    return { error: "Il nodo contiene figli o dati storici e può essere soltanto archiviato." };
+    return {
+      error: "Il gruppo contiene sottogruppi o dati storici e può essere soltanto archiviato.",
+    };
   }
 
   const { error } = await supabase
@@ -217,5 +220,5 @@ export async function deleteGroupNode(input: DeleteGroupNodeInput): Promise<Grou
   }
 
   revalidateDashboard();
-  return { success: "Nodo eliminato." };
+  return { success: "Gruppo eliminato." };
 }

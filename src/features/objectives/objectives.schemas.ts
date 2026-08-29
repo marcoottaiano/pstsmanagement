@@ -9,19 +9,13 @@ const titleSchema = z
   .max(200, "Il titolo è troppo lungo.");
 const descriptionSchema = z.string().trim().max(2_000, "La descrizione è troppo lunga.").nullable();
 
-export const objectiveStatusSchema = z.enum([
-  "NOT_STARTED",
-  "IN_PROGRESS",
-  "COMPLETED",
-  "POSTPONED",
-]);
+export const objectiveStatusSchema = z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED"]);
 
 const objectiveFields = {
   sectorId: uuidSchema,
   groupId: uuidSchema,
   title: titleSchema,
   description: descriptionSchema,
-  status: objectiveStatusSchema,
   periodStart: dateSchema.nullable(),
   periodEnd: dateSchema.nullable(),
 };
@@ -47,6 +41,8 @@ export const objectiveDatabaseSchema = z
     title: z.string().min(1),
     description: z.string().nullable(),
     status: objectiveStatusSchema,
+    completed_at: z.string().datetime({ offset: true }).nullable(),
+    completed_late: z.boolean(),
     period_start: dateSchema.nullable(),
     period_end: dateSchema.nullable(),
     created_by: uuidSchema.nullable(),
@@ -60,6 +56,8 @@ export const objectiveDatabaseSchema = z
     title: objective.title,
     description: objective.description,
     status: objective.status,
+    completedAt: objective.completed_at,
+    completedLate: objective.completed_late,
     periodStart: objective.period_start,
     periodEnd: objective.period_end,
     createdBy: objective.created_by,

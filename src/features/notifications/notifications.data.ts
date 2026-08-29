@@ -15,6 +15,7 @@ const NOTIFICATION_LIMIT = 20;
 const DUE_SOON_WINDOW_MS = 24 * 60 * 60 * 1_000;
 const GENERATED_KINDS: readonly NotificationKind[] = [
   "REMINDER_ASSIGNED",
+  "REMINDER_DUE_TODAY",
   "REMINDER_DUE_SOON",
   "REMINDER_OVERDUE",
 ];
@@ -45,6 +46,10 @@ function createNotificationInsert(
     REMINDER_DUE_SOON: {
       title: "Scadenza imminente",
       message: `“${reminder.title}” scade ${dueLabel ?? "a breve"}.`,
+    },
+    REMINDER_DUE_TODAY: {
+      title: "Scadenza oggi",
+      message: `“${reminder.title}” scade oggi${reminder.due_all_day ? "." : `, ${dueLabel ?? "a breve"}.`}`,
     },
     REMINDER_OVERDUE: {
       title: "Scadenza superata",
@@ -136,6 +141,7 @@ async function synchronizeNotifications(userId: string): Promise<void> {
   }
 
   const now = Date.now();
+  const today = getRomeDayKey();
   const desiredNotifications = new Map<string, GeneratedNotificationInsert>();
   for (const reminder of reminderById.values()) {
     if (assignedReminderIdSet.has(reminder.id) && reminder.created_by !== userId) {
@@ -148,9 +154,12 @@ async function synchronizeNotifications(userId: string): Promise<void> {
     }
 
     const dueTime = new Date(reminder.due_at).getTime();
-    const dueKind =
-      dueTime < now
-        ? "REMINDER_OVERDUE"
+    const dueDay = getRomeDayKey(reminder.due_at);
+    const overdue = reminder.due_all_day ? dueDay < today : dueTime < now;
+    const dueKind = overdue
+      ? "REMINDER_OVERDUE"
+      : dueDay === today
+        ? "REMINDER_DUE_TODAY"
         : dueTime <= now + DUE_SOON_WINDOW_MS
           ? "REMINDER_DUE_SOON"
           : null;
@@ -246,11 +255,10 @@ export async function getNotificationFeed(): Promise<NotificationFeed> {
       return [];
     }
 
-    const date = notification.dueAt ? getRomeDayKey(notification.dueAt) : getRomeDayKey();
     return [
       {
         ...notification,
-        href: `/dashboard?sector=${sectorCode}&date=${date}`,
+        href: `/dashboard?sector=${sectorCode}`,
       },
     ];
   });

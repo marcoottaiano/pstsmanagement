@@ -11,7 +11,6 @@ import {
 } from "./groups.schemas";
 
 export type GroupNode = z.infer<typeof groupNodeSchema>;
-export type GroupNodeType = GroupNode["nodeType"];
 export type CreateGroupNodeInput = z.infer<typeof createGroupNodeSchema>;
 export type RenameGroupNodeInput = z.infer<typeof renameGroupNodeSchema>;
 export type MoveGroupNodeInput = z.infer<typeof moveGroupNodeSchema>;

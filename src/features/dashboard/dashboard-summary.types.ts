@@ -8,7 +8,9 @@ export type GroupWorkload = Readonly<{
 export type DashboardSummaryData = Readonly<{
   imminentWorkCount: number;
   overdueReminderCount: number;
+  lateCompletedReminderCount: number;
   completedObjectiveCount: number;
+  lateCompletedObjectiveCount: number;
   totalObjectiveCount: number;
   lateObjectiveCount: number;
   groupWorkloads: readonly GroupWorkload[];

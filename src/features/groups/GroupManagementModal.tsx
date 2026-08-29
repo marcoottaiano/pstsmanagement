@@ -2,13 +2,11 @@
 
 import {
   Alert,
-  Badge,
   Button,
   Divider,
   Grid,
   Group,
   Modal,
-  Radio,
   Select,
   Stack,
   Tabs,
@@ -21,7 +19,6 @@ import {
   IconArchive,
   IconArrowDown,
   IconArrowUp,
-  IconFolder,
   IconFolderOpen,
   IconGripVertical,
   IconPlus,
@@ -43,8 +40,7 @@ import {
   reorderGroupNode,
   setGroupSubtreeArchiveState,
 } from "./groups.actions";
-import { groupNodeTypeSchema } from "./groups.schemas";
-import type { GroupActionResult, GroupNode, GroupNodeType } from "./groups.types";
+import type { GroupActionResult, GroupNode } from "./groups.types";
 import { getChildNodes, getDescendantNodeIds, getTreeRoots } from "./groups.utils";
 
 type GroupManagementModalProps = Readonly<{
@@ -60,7 +56,7 @@ type Feedback = Readonly<{
 const ROOT_VALUE = "__root__";
 
 function getNodeLabel(node: GroupNode): string {
-  return `${node.name} · ${node.nodeType === "CATEGORY" ? "Categoria" : "Gruppo"}`;
+  return node.name;
 }
 
 function GroupTreeNode({
@@ -109,17 +105,10 @@ function GroupTreeNode({
           onClick={() => onSelect(node.id)}
         >
           <Group gap="xs" wrap="nowrap">
-            {node.nodeType === "CATEGORY" ? <IconFolder size={16} /> : <IconFolderOpen size={16} />}
+            <IconFolderOpen size={18} aria-hidden="true" />
             <Text size="sm" truncate>
               {node.name}
             </Text>
-            <Badge
-              size="xs"
-              variant="light"
-              color={node.nodeType === "CATEGORY" ? "blue" : "grape"}
-            >
-              {node.nodeType === "CATEGORY" ? "Categoria" : "Gruppo"}
-            </Badge>
           </Group>
         </Button>
       </div>
@@ -146,7 +135,6 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
   const router = useRouter();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [newNodeName, setNewNodeName] = useState("");
-  const [newNodeType, setNewNodeType] = useState<GroupNodeType>("CATEGORY");
   const [newParentId, setNewParentId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [moveParentId, setMoveParentId] = useState<string | null>(null);
@@ -161,7 +149,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
     ? getDescendantNodeIds(nodes, selectedNode.id)
     : new Set<string>();
   const eligibleParents = activeNodes.filter((node) => !selectedDescendantIds.has(node.id));
-  const parentOptions = [{ value: ROOT_VALUE, label: "Radice del settore" }].concat(
+  const parentOptions = [{ value: ROOT_VALUE, label: "Nessun gruppo principale" }].concat(
     eligibleParents.map((node) => ({ value: node.id, label: getNodeLabel(node) })),
   );
 
@@ -186,13 +174,6 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
     setRenameValue(node?.name ?? "");
     setMoveParentId(node?.parentId ?? ROOT_VALUE);
     setNewParentId(nodeId);
-  }
-
-  function updateNewNodeType(value: string): void {
-    const parsed = groupNodeTypeSchema.safeParse(value);
-    if (parsed.success) {
-      setNewNodeType(parsed.data);
-    }
   }
 
   function handleDrop(draggedNodeId: string, parentId: string): void {
@@ -220,8 +201,8 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
       >
         <Stack gap="lg">
           <Text c="dimmed" size="sm">
-            Trascina un nodo sopra il nuovo genitore per spostarlo. Le frecce restano disponibili
-            per il riordino accessibile.
+            Trascina un gruppo sopra il nuovo gruppo genitore per spostarlo. Le frecce restano
+            disponibili per il riordino accessibile.
           </Text>
 
           {feedback ? (
@@ -255,7 +236,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                 </ul>
               ) : (
                 <Text c="dimmed" size="sm">
-                  Nessun nodo attivo.
+                  Nessun gruppo attivo.
                 </Text>
               )}
             </Tabs.Panel>
@@ -275,7 +256,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                 </ul>
               ) : (
                 <Text c="dimmed" size="sm">
-                  Nessun nodo archiviato.
+                  Nessun gruppo archiviato.
                 </Text>
               )}
             </Tabs.Panel>
@@ -283,9 +264,9 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
 
           <Divider />
           <Stack gap="sm">
-            <Text fw={600}>Nuovo nodo</Text>
+            <Text fw={600}>Nuovo gruppo</Text>
             <Grid align="end" gap="md">
-              <Grid.Col span={{ base: 12, md: 4 }}>
+              <Grid.Col span={{ base: 12, md: 5 }}>
                 <TextInput
                   label="Nome"
                   required
@@ -293,18 +274,11 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                   onChange={(event) => setNewNodeName(event.currentTarget.value)}
                 />
               </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Radio.Group label="Tipo" value={newNodeType} onChange={updateNewNodeType}>
-                  <Group mt="xs" wrap="nowrap">
-                    <Radio value="CATEGORY" label="Categoria" />
-                    <Radio value="GROUP" label="Gruppo" />
-                  </Group>
-                </Radio.Group>
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+              <Grid.Col span={{ base: 12, md: 5 }}>
                 <Select
-                  label="Genitore"
-                  data={[{ value: ROOT_VALUE, label: "Radice del settore" }].concat(
+                  label="Gruppo principale"
+                  description="Lascia vuoto per creare un gruppo al primo livello."
+                  data={[{ value: ROOT_VALUE, label: "Nessun gruppo principale" }].concat(
                     activeNodes.map((node) => ({ value: node.id, label: getNodeLabel(node) })),
                   )}
                   value={newParentId ?? ROOT_VALUE}
@@ -325,7 +299,6 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                         sectorId: sector.id,
                         parentId: newParentId,
                         name: newNodeName,
-                        nodeType: newNodeType,
                       });
                       if (!result.error) {
                         setNewNodeName("");
@@ -334,7 +307,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                     })
                   }
                 >
-                  Crea nodo
+                  Crea gruppo
                 </Button>
               </Grid.Col>
             </Grid>
@@ -344,7 +317,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
             <>
               <Divider />
               <Stack gap="sm">
-                <Text fw={600}>Nodo selezionato: {selectedNode.name}</Text>
+                <Text fw={600}>Gruppo selezionato: {selectedNode.name}</Text>
                 <TextInput
                   label="Rinomina"
                   value={renameValue}
@@ -441,7 +414,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                           )
                         }
                       >
-                        Archivia sottoalbero
+                        Archivia gruppo e sottogruppi
                       </Button>
                       <Button
                         color="red"
@@ -449,7 +422,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                         leftSection={<IconTrash size={16} />}
                         onClick={() => setDeleteConfirmationOpen(true)}
                       >
-                        Elimina nodo vuoto
+                        Elimina gruppo vuoto
                       </Button>
                     </Group>
                   </>
@@ -469,7 +442,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                       )
                     }
                   >
-                    Ripristina sottoalbero
+                    Ripristina gruppo e sottogruppi
                   </Button>
                 )}
               </Stack>
@@ -480,13 +453,13 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
       <Modal
         opened={deleteConfirmationOpen}
         onClose={() => setDeleteConfirmationOpen(false)}
-        title="Eliminare il nodo?"
+        title="Eliminare il gruppo?"
         centered
       >
         <Stack gap="md">
           <Text>
             L&apos;eliminazione è definitiva. Il database bloccherà comunque l&apos;operazione se il
-            nodo ha figli o dati storici associati.
+            gruppo ha sottogruppi o dati storici associati.
           </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setDeleteConfirmationOpen(false)}>
@@ -500,7 +473,7 @@ export function GroupManagementModal({ sector, nodes }: GroupManagementModalProp
                 void runAction(async () => {
                   const result = selectedNode
                     ? await deleteGroupNode({ sectorId: sector.id, nodeId: selectedNode.id })
-                    : { error: "Il nodo selezionato non è più disponibile." };
+                    : { error: "Il gruppo selezionato non è più disponibile." };
                   if (!result.error) {
                     setDeleteConfirmationOpen(false);
                     setSelectedNodeId(null);

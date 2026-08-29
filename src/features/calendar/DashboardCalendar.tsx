@@ -11,7 +11,6 @@ import FullCalendar from "@fullcalendar/react";
 import { Button, Group, Paper, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCalendarMonth, IconPlus } from "@tabler/icons-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import type { Sector } from "@/features/auth/auth.types";
@@ -48,6 +47,8 @@ type DashboardCalendarProps = Readonly<{
   assigneeOptions: readonly ReminderPerson[];
   currentUserId: string;
   preferredGroupId: string | null;
+  calendarDateChangeAction: (calendarDate: string) => Promise<void>;
+  refreshAction: () => void;
 }>;
 
 type ModalState =
@@ -172,9 +173,9 @@ export function DashboardCalendar({
   assigneeOptions,
   currentUserId,
   preferredGroupId,
+  calendarDateChangeAction,
+  refreshAction,
 }: DashboardCalendarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [modalState, setModalState] = useState<ModalState | null>(null);
   const calendarItems: CalendarItem[] = [
     ...scheduledWork,
@@ -218,12 +219,7 @@ export function DashboardCalendar({
       return;
     }
 
-    const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.set("sector", sector.code);
-    nextParams.set("date", nextDate);
-    nextParams.delete("selection");
-    nextParams.delete("groupNotice");
-    router.push(`/dashboard?${nextParams.toString()}`);
+    void calendarDateChangeAction(nextDate);
   }
 
   async function persistDateChange(
@@ -256,7 +252,7 @@ export function DashboardCalendar({
     }
 
     notifications.show({ color: "green", message: result.success });
-    router.refresh();
+    refreshAction();
   }
 
   function handleDateClick({ dateStr }: DateClickArg): void {
@@ -340,6 +336,7 @@ export function DashboardCalendar({
           item={modalState.item}
           preset={modalState.preset}
           onClose={() => setModalState(null)}
+          refreshAction={refreshAction}
         />
       ) : null}
 
@@ -348,12 +345,13 @@ export function DashboardCalendar({
           key={modalState.key}
           opened
           sectorId={sector.id}
-          groups={groups}
+          nodes={groups}
           assigneeOptions={assigneeOptions}
           currentUserId={currentUserId}
-          preferredGroupId={preferredGroupId}
+          preferredNodeId={preferredGroupId}
           item={modalState.item}
           onClose={() => setModalState(null)}
+          refreshAction={refreshAction}
         />
       ) : null}
     </Paper>
