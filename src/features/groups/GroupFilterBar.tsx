@@ -76,6 +76,7 @@ export function GroupFilterBar({
                   onChange={(value) =>
                     setGroupSelection(value ?? parentAtPreviousLevel?.id ?? null)
                   }
+                  searchable
                   clearable
                   w={{ base: "100%", sm: 240 }}
                   maxDropdownHeight={300}
