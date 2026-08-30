@@ -7,9 +7,9 @@ import {
   Modal,
   Paper,
   Stack,
-  Stepper,
   Text,
   ThemeIcon,
+  UnstyledButton,
   Card,
 } from "@mantine/core";
 import {
@@ -225,9 +225,8 @@ export function HelpGuide({ isAdmin = false, opened: controlledOpened, onClose }
 
   // Scroll to top quando cambia lo step
   useEffect(() => {
-    if (modalContentRef.current) {
-      modalContentRef.current.scrollTo(0, 0);
-    }
+    const modalContent = modalContentRef.current?.closest<HTMLElement>("[data-modal-content]");
+    modalContent?.scrollTo({ top: 0 });
   }, [activeStep, isQuickStartMode]);
 
   function closeGuide(): void {
@@ -348,93 +347,111 @@ export function HelpGuide({ isAdmin = false, opened: controlledOpened, onClose }
                 Scopri cosa puoi fare in ogni area e come usare le funzioni principali.
               </Text>
 
-              <div style={{ overflowX: "auto", overflowY: "visible" }}>
-                <Stepper
-                  active={activeStep}
-                  size="sm"
-                  iconSize={32}
-                  allowNextStepsSelect={false}
-                  className="help-guide-stepper"
-                  styles={{
-                    stepIcon: {
-                      minWidth: "auto",
-                    },
-                  }}
-                >
-                  {steps.map((step) => {
+              <nav aria-label="Sezioni della guida">
+                <div className="help-guide-navigation">
+                  {steps.map((step, index) => {
                     const StepIcon = step.icon;
+
                     return (
-                      <Stepper.Step
+                      <UnstyledButton
                         key={step.title}
-                        label={step.title}
-                        icon={<StepIcon size={16} aria-hidden="true" />}
-                        aria-label={step.title}
+                        className="help-guide-navigation-item"
+                        data-active={index === activeStep || undefined}
+                        data-completed={index < activeStep || undefined}
+                        disabled={index > activeStep}
+                        aria-current={index === activeStep ? "step" : undefined}
+                        onClick={() => setActiveStep(index)}
                       >
-                        <Paper withBorder p="lg" mt="lg" radius="md">
-                          <Stack gap="lg">
-                            {/* Section Header */}
-                            <div>
-                              <Group wrap="nowrap" gap="sm" align="center" mb="sm">
-                                <Text size="2xl">{step.emoji}</Text>
-                                <div style={{ flex: 1 }}>
-                                  <Text fw={700} size="lg">
-                                    {step.title}
-                                  </Text>
-                                  <Text size="xs" c="dimmed">
-                                    {step.shortDescription}
-                                  </Text>
-                                </div>
-                              </Group>
-                            </div>
-
-                            {/* Cosa puoi fare */}
-                            <div>
-                              <Text fw={700} mb="xs" size="sm">
-                                ✓ Cosa puoi fare
-                              </Text>
-                              <List size="sm" spacing="md">
-                                {step.canDo.map((item) => (
-                                  <List.Item key={item} style={{ lineHeight: 1.5 }}>
-                                    {item}
-                                  </List.Item>
-                                ))}
-                              </List>
-                            </div>
-
-                            {/* Tips */}
-                            {step.tips && step.tips.length > 0 && (
-                              <Paper withBorder p="md" radius="md" bg="blue.0" c="blue.9">
-                                <Text fw={700} mb="xs" size="xs">
-                                  💡 Consigli Utili
-                                </Text>
-                                <List size="xs" spacing="xs">
-                                  {step.tips.map((tip) => (
-                                    <List.Item key={tip}>{tip}</List.Item>
-                                  ))}
-                                </List>
-                              </Paper>
-                            )}
-
-                            {/* Come si usa */}
-                            <div>
-                              <Text fw={700} mb="xs" size="sm">
-                                📍 Come si usa
-                              </Text>
-                              <List type="ordered" size="sm" spacing="md">
-                                {step.howTo.map((item) => (
-                                  <List.Item key={item} style={{ lineHeight: 1.5 }}>
-                                    {item}
-                                  </List.Item>
-                                ))}
-                              </List>
-                            </div>
-                          </Stack>
-                        </Paper>
-                      </Stepper.Step>
+                        <ThemeIcon
+                          size="md"
+                          radius="xl"
+                          variant={index === activeStep ? "filled" : "light"}
+                          color="blue"
+                        >
+                          <StepIcon size={16} aria-hidden="true" />
+                        </ThemeIcon>
+                        <Text
+                          component="span"
+                          className="help-guide-navigation-label"
+                          size="sm"
+                          fw={600}
+                        >
+                          {step.title}
+                        </Text>
+                      </UnstyledButton>
                     );
                   })}
-                </Stepper>
-              </div>
+                </div>
+              </nav>
+
+              {steps.map((step, index) => {
+                if (index !== activeStep) {
+                  return null;
+                }
+
+                return (
+                  <Paper key={step.title} withBorder p="lg" radius="md">
+                    <Stack gap="lg">
+                      {/* Section Header */}
+                      <div>
+                        <Group wrap="nowrap" gap="sm" align="center" mb="sm">
+                          <Text size="2xl">{step.emoji}</Text>
+                          <div style={{ flex: 1 }}>
+                            <Text fw={700} size="lg">
+                              {step.title}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {step.shortDescription}
+                            </Text>
+                          </div>
+                        </Group>
+                      </div>
+
+                      {/* Cosa puoi fare */}
+                      <div>
+                        <Text fw={700} mb="xs" size="sm">
+                          ✓ Cosa puoi fare
+                        </Text>
+                        <List size="sm" spacing="md">
+                          {step.canDo.map((item) => (
+                            <List.Item key={item} style={{ lineHeight: 1.5 }}>
+                              {item}
+                            </List.Item>
+                          ))}
+                        </List>
+                      </div>
+
+                      {/* Tips */}
+                      {step.tips && step.tips.length > 0 && (
+                        <Paper withBorder p="md" radius="md" bg="blue.0" c="blue.9">
+                          <Text fw={700} mb="xs" size="xs">
+                            💡 Consigli Utili
+                          </Text>
+                          <List size="xs" spacing="xs">
+                            {step.tips.map((tip) => (
+                              <List.Item key={tip}>{tip}</List.Item>
+                            ))}
+                          </List>
+                        </Paper>
+                      )}
+
+                      {/* Come si usa */}
+                      <div>
+                        <Text fw={700} mb="xs" size="sm">
+                          📍 Come si usa
+                        </Text>
+                        <List type="ordered" size="sm" spacing="md">
+                          {step.howTo.map((item) => (
+                            <List.Item key={item} style={{ lineHeight: 1.5 }}>
+                              {item}
+                            </List.Item>
+                          ))}
+                        </List>
+                      </div>
+                    </Stack>
+                  </Paper>
+                );
+              })}
 
               <Group justify="space-between" wrap="wrap" gap="sm">
                 <Button

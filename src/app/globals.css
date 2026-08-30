@@ -16,7 +16,6 @@ body {
 
 /* Prevent Safari iOS autofocus zoom on input/select */
 @media (hover: none) and (pointer: coarse) {
-
   input,
   select,
   textarea,
@@ -400,14 +399,54 @@ body {
   transform: scale(1.06);
 }
 
-.help-guide-stepper .mantine-Stepper-steps {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
+.help-guide-navigation {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--mantine-spacing-xs);
 }
 
-.help-guide-stepper .mantine-Stepper-stepLabel {
-  white-space: nowrap;
+.help-guide-navigation-item {
+  display: flex;
+  min-width: 0;
+  min-height: 3.25rem;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: var(--mantine-radius-md);
+  color: var(--mantine-color-dimmed);
+  background: var(--mantine-color-body);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.help-guide-navigation-item[data-completed] {
+  color: var(--mantine-color-text);
+  cursor: pointer;
+}
+
+.help-guide-navigation-item[data-active] {
+  border-color: var(--mantine-primary-color-filled);
+  color: var(--mantine-color-text);
+  background: var(--mantine-primary-color-light);
+}
+
+.help-guide-navigation-item[data-completed]:hover,
+.help-guide-navigation-item[data-completed]:focus-visible {
+  border-color: var(--mantine-color-blue-4);
+  background: var(--mantine-color-blue-0);
+}
+
+.help-guide-navigation-item:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.help-guide-navigation-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .activity-log-item {
@@ -426,9 +465,24 @@ body {
   flex: 1;
 }
 
+@media (width < 62em) {
+  .help-guide-navigation {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (width < 48em) {
-  .help-guide-modal .mantine-Stepper-stepLabel {
-    display: none;
+  .help-guide-navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .help-guide-navigation-item {
+    min-height: 4rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+    padding-inline: var(--mantine-spacing-xs);
+    text-align: center;
   }
 }
 
@@ -564,7 +618,6 @@ body {
 }
 
 @media print {
-
   .dashboard-header,
   .monthly-report-actions {
     display: none !important;
