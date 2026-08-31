@@ -15,10 +15,16 @@ export type UpdateScheduledWorkInput = z.infer<typeof updateScheduledWorkSchema>
 export type DeleteScheduledWorkInput = z.infer<typeof deleteScheduledWorkSchema>;
 export type UpdateScheduledWorkDatesInput = z.infer<typeof updateScheduledWorkDatesSchema>;
 
+export type ScheduledWorkGroup = Readonly<{
+  id: string;
+  name: string;
+  isArchived: boolean;
+}>;
+
 export type ScheduledWorkCalendarItem = ScheduledWork &
   Readonly<{
     itemType: "scheduledWork";
-    groupName: string;
+    groups: readonly ScheduledWorkGroup[];
   }>;
 
 export type ScheduledWorkEventInput = EventInput &
@@ -27,7 +33,7 @@ export type ScheduledWorkEventInput = EventInput &
       itemId: string;
       itemType: "scheduledWork";
       sectorId: string;
-      groupId: string;
+      groupIds: readonly string[];
       groupName: string;
       description: string | null;
     };

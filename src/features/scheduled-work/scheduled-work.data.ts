@@ -1,11 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 
-import { scheduledWorkDatabaseSchema } from "./scheduled-work.schemas";
-import type { ScheduledWork, ScheduledWorkCalendarItem } from "./scheduled-work.types";
+import { scheduledWorkDatabaseSchema, scheduledWorkGroupRowSchema } from "./scheduled-work.schemas";
+import type {
+  ScheduledWork,
+  ScheduledWorkCalendarItem,
+  ScheduledWorkGroup,
+} from "./scheduled-work.types";
 import { toCalendarItem } from "./scheduled-work.mapper";
 
 const scheduledWorkColumns =
-  "id, sector_id, group_id, title, description, start_at, end_at, all_day, created_by, created_at, updated_at";
+  "id, sector_id, title, description, start_at, end_at, all_day, created_by, created_at, updated_at";
 
 function parseScheduledWork(data: unknown): readonly ScheduledWork[] {
   const parsed = scheduledWorkDatabaseSchema.array().safeParse(data);
@@ -23,7 +27,6 @@ export async function getScheduledWorkForVisibleRange(
   groupIds: readonly string[],
   rangeStartAt: string,
   rangeEndAt: string,
-  groupNames: ReadonlyMap<string, string>,
 ): Promise<readonly ScheduledWorkCalendarItem[]> {
   if (groupIds.length === 0) {
     return [];
@@ -34,7 +37,6 @@ export async function getScheduledWorkForVisibleRange(
     .from("scheduled_work")
     .select(scheduledWorkColumns)
     .eq("sector_id", sectorId)
-    .in("group_id", [...groupIds])
     .lt("start_at", rangeEndAt)
     .or(`end_at.is.null,end_at.gt.${rangeStartAt}`)
     .order("start_at");
@@ -44,7 +46,53 @@ export async function getScheduledWorkForVisibleRange(
     throw new Error("Impossibile caricare i lavori programmati.");
   }
 
-  return parseScheduledWork(data).map((work) =>
-    toCalendarItem(work, groupNames.get(work.groupId) ?? "Gruppo"),
-  );
+  const works = parseScheduledWork(data);
+  if (works.length === 0) {
+    return [];
+  }
+
+  const { data: groupRows, error: groupError } = await supabase
+    .from("scheduled_work_groups")
+    .select("scheduled_work_id, group_id, group_nodes(name, is_archived)")
+    .in(
+      "scheduled_work_id",
+      works.map((work) => work.id),
+    );
+
+  if (groupError) {
+    console.error("Scheduled work groups query failed.", {
+      code: groupError.code,
+      message: groupError.message,
+    });
+    throw new Error("Impossibile caricare i gruppi dei lavori programmati.");
+  }
+
+  const parsedGroups = scheduledWorkGroupRowSchema.array().safeParse(groupRows);
+  if (!parsedGroups.success) {
+    console.error("Scheduled work groups response failed validation.", {
+      issues: parsedGroups.error.issues,
+    });
+    throw new Error("I gruppi dei lavori programmati restituiti dal database non sono validi.");
+  }
+
+  const groupsByWork = new Map<string, ScheduledWorkGroup[]>();
+  for (const row of parsedGroups.data) {
+    const groups = groupsByWork.get(row.scheduled_work_id) ?? [];
+    groups.push({
+      id: row.group_id,
+      name: row.group_nodes.name,
+      isArchived: row.group_nodes.is_archived,
+    });
+    groupsByWork.set(row.scheduled_work_id, groups);
+  }
+
+  const visibleGroupIds = new Set(groupIds);
+  return works.flatMap((work) => {
+    const groups = (groupsByWork.get(work.id) ?? []).toSorted((left, right) =>
+      left.name.localeCompare(right.name, "it"),
+    );
+    return groups.some((group) => visibleGroupIds.has(group.id))
+      ? [toCalendarItem(work, groups)]
+      : [];
+  });
 }

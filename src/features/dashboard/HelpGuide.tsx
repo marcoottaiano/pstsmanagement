@@ -47,7 +47,7 @@ const QUICK_START_SECTION = {
       number: 3,
       title: "Creare il Primo Lavoro",
       description:
-        "Nel Calendario, clicca 'Nuovo lavoro' o direttamente su un giorno. Aggiungi titolo, gruppo e data. Vedrai il lavoro nella timeline.",
+        "Nel Calendario, clicca 'Nuovo lavoro' o direttamente su un giorno. Aggiungi titolo, uno o più gruppi e la data. Vedrai il lavoro nella timeline.",
       icon: IconCalendarMonth,
     },
     {
@@ -109,7 +109,7 @@ const GUIDE_STEPS = [
     ],
     howTo: [
       "Clicca il pulsante 'Nuovo lavoro' oppure clicca direttamente sul giorno interessato nel calendario.",
-      "Compila il titolo, assegna il lavoro a un gruppo, e imposta la data di inizio e fine.",
+      "Compila il titolo, assegna il lavoro a uno o più gruppi e imposta la data di inizio e fine.",
       "Per modificare, clicca l'evento nel calendario per aprire la modal di dettagli.",
       "Trascina l'evento su un'altra data: il cambiamento viene salvato automaticamente.",
     ],

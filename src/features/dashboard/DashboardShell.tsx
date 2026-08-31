@@ -74,7 +74,7 @@ export function DashboardShell({
     scopeGroupIdSet.has(group.id),
   );
   const visibleScheduledWork = dashboardData.scheduledWork.filter((work) =>
-    scopeGroupIdSet.has(work.groupId),
+    work.groups.some((group) => scopeGroupIdSet.has(group.id)),
   );
   const visibleReminders = dashboardData.reminders.filter(
     (reminder) => !reminder.groupId || scopedNodeIds.has(reminder.groupId),
@@ -146,6 +146,7 @@ export function DashboardShell({
             scheduledWork={visibleScheduledWork}
             reminders={visibleReminders}
             groups={visibleGroups}
+            workGroupOptions={dashboardData.selectableGroups}
             assigneeOptions={dashboardData.assigneeOptions}
             currentUserId={currentUserId}
             preferredGroupId={preferredGroupId}

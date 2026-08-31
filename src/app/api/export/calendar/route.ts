@@ -13,6 +13,7 @@ import { calendarExportQuerySchema } from "@/features/exports/export.schemas";
 import { getGroupNodes } from "@/features/groups/groups.data";
 import { getVisibleReminders } from "@/features/reminders/reminders.data";
 import { getScheduledWorkForVisibleRange } from "@/features/scheduled-work/scheduled-work.data";
+import { getScheduledWorkGroupNames } from "@/features/scheduled-work/scheduled-work.mapper";
 import {
   getVisibleMonthRange,
   isValidCalendarDate,
@@ -60,13 +61,7 @@ export async function GET(request: Request): Promise<Response> {
   const groupNames = new Map(groups.map((group) => [group.id, group.name]));
   const range = getVisibleMonthRange(parsed.data.date);
   const [scheduledWork, reminders] = await Promise.all([
-    getScheduledWorkForVisibleRange(
-      authorization.sector.id,
-      groupIds,
-      range.startAt,
-      range.endAt,
-      groupNames,
-    ),
+    getScheduledWorkForVisibleRange(authorization.sector.id, groupIds, range.startAt, range.endAt),
     getVisibleReminders(authorization.sector.id, groupIds, groupNames),
   ]);
   const calendarItems: readonly CalendarExportItem[] = [
@@ -74,7 +69,7 @@ export async function GET(request: Request): Promise<Response> {
       title: item.title,
       type: "Lavoro programmato" as const,
       date: formatDate(item.startAt, item.allDay),
-      groupName: item.groupName,
+      groupName: getScheduledWorkGroupNames(item.groups),
     })),
     ...reminders
       .filter(

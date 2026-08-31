@@ -44,6 +44,7 @@ type DashboardCalendarProps = Readonly<{
   scheduledWork: readonly ScheduledWorkCalendarItem[];
   reminders: readonly Reminder[];
   groups: readonly GroupNode[];
+  workGroupOptions: readonly GroupNode[];
   assigneeOptions: readonly ReminderPerson[];
   currentUserId: string;
   preferredGroupId: string | null;
@@ -170,6 +171,7 @@ export function DashboardCalendar({
   scheduledWork,
   reminders,
   groups,
+  workGroupOptions,
   assigneeOptions,
   currentUserId,
   preferredGroupId,
@@ -331,7 +333,7 @@ export function DashboardCalendar({
           key={modalState.key}
           opened
           sectorId={sector.id}
-          groups={groups}
+          groups={workGroupOptions}
           preferredGroupId={preferredGroupId}
           item={modalState.item}
           preset={modalState.preset}

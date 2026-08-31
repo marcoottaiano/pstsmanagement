@@ -26,13 +26,18 @@ function getGroupWorkloads(
   const workloads = new Map<string, GroupWorkload>();
 
   for (const work of scheduledWork) {
-    const current = workloads.get(work.groupId) ?? {
-      groupId: work.groupId,
-      groupName: work.groupName,
-      scheduledWorkCount: 0,
-      openReminderCount: 0,
-    };
-    workloads.set(work.groupId, { ...current, scheduledWorkCount: current.scheduledWorkCount + 1 });
+    for (const group of work.groups) {
+      const current = workloads.get(group.id) ?? {
+        groupId: group.id,
+        groupName: group.name,
+        scheduledWorkCount: 0,
+        openReminderCount: 0,
+      };
+      workloads.set(group.id, {
+        ...current,
+        scheduledWorkCount: current.scheduledWorkCount + 1,
+      });
+    }
   }
 
   for (const reminder of reminders) {

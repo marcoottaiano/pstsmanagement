@@ -8,10 +8,16 @@ const titleSchema = z
   .min(1, "Inserisci un titolo.")
   .max(200, "Il titolo è troppo lungo.");
 const descriptionSchema = z.string().trim().max(2_000, "La descrizione è troppo lunga.").nullable();
+const groupIdsSchema = z
+  .array(uuidSchema)
+  .min(1, "Seleziona almeno un gruppo.")
+  .refine((groupIds) => new Set(groupIds).size === groupIds.length, {
+    message: "Ogni gruppo può essere selezionato una sola volta.",
+  });
 
 const scheduledWorkFields = {
   sectorId: uuidSchema,
-  groupId: uuidSchema,
+  groupIds: groupIdsSchema,
   title: titleSchema,
   description: descriptionSchema,
   startAt: timestampSchema,
@@ -27,7 +33,6 @@ export const scheduledWorkDatabaseSchema = z
   .object({
     id: uuidSchema,
     sector_id: uuidSchema,
-    group_id: uuidSchema,
     title: z.string().min(1),
     description: z.string().nullable(),
     start_at: timestampSchema,
@@ -40,7 +45,6 @@ export const scheduledWorkDatabaseSchema = z
   .transform((work) => ({
     id: work.id,
     sectorId: work.sector_id,
-    groupId: work.group_id,
     title: work.title,
     description: work.description,
     startAt: work.start_at,
@@ -50,6 +54,15 @@ export const scheduledWorkDatabaseSchema = z
     createdAt: work.created_at,
     updatedAt: work.updated_at,
   }));
+
+export const scheduledWorkGroupRowSchema = z.object({
+  scheduled_work_id: uuidSchema,
+  group_id: uuidSchema,
+  group_nodes: z.object({
+    name: z.string().min(1),
+    is_archived: z.boolean(),
+  }),
+});
 
 export const createScheduledWorkSchema = z
   .object(scheduledWorkFields)

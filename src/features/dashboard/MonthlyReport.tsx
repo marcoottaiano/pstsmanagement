@@ -5,6 +5,7 @@ import { IconFileDescription, IconPrinter } from "@tabler/icons-react";
 
 import type { Objective } from "@/features/objectives/objectives.types";
 import type { Reminder } from "@/features/reminders/reminders.types";
+import { getScheduledWorkGroupNames } from "@/features/scheduled-work/scheduled-work.mapper";
 import type { ScheduledWorkCalendarItem } from "@/features/scheduled-work/scheduled-work.types";
 
 import { formatCompletionDateTime } from "./completion";
@@ -137,7 +138,7 @@ export function MonthlyReport({
         items={scheduledWork.map((item) => ({
           id: item.id,
           title: item.title,
-          detail: `${item.groupName} | ${new Intl.DateTimeFormat("it-IT", { dateStyle: "medium", timeZone: "Europe/Rome" }).format(new Date(item.startAt))}`,
+          detail: `${getScheduledWorkGroupNames(item.groups)} | ${new Intl.DateTimeFormat("it-IT", { dateStyle: "medium", timeZone: "Europe/Rome" }).format(new Date(item.startAt))}`,
         }))}
       />
       <ReportList

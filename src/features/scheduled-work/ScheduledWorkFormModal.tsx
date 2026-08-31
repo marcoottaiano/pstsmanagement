@@ -5,7 +5,7 @@ import {
   Checkbox,
   Group,
   Modal,
-  Select,
+  MultiSelect,
   SimpleGrid,
   Stack,
   Switch,
@@ -54,7 +54,7 @@ type ScheduledWorkFormModalProps = Readonly<{
 type FormValues = {
   title: string;
   description: string;
-  groupId: string;
+  groupIds: string[];
   allDay: boolean;
   startDate: string;
   startTime: string;
@@ -72,7 +72,7 @@ function getInitialValues(
     return {
       title: "",
       description: "",
-      groupId: preferredGroupId ?? "",
+      groupIds: preferredGroupId ? [preferredGroupId] : [],
       allDay: preset.allDay,
       startDate: preset.startDate,
       startTime: preset.startTime,
@@ -88,7 +88,7 @@ function getInitialValues(
   return {
     title: item.title,
     description: item.description ?? "",
-    groupId: item.groupId,
+    groupIds: item.groups.map((group) => group.id),
     allDay: item.allDay,
     startDate: start.date,
     startTime: start.time,
@@ -135,8 +135,8 @@ export function ScheduledWorkFormModal({
   async function handleSubmit(values: FormValues): Promise<void> {
     form.clearErrors();
 
-    if (!values.groupId) {
-      form.setFieldError("groupId", "Seleziona un gruppo.");
+    if (values.groupIds.length === 0) {
+      form.setFieldError("groupIds", "Seleziona almeno un gruppo.");
       return;
     }
     if (!values.startDate || (!values.allDay && !values.startTime)) {
@@ -162,7 +162,7 @@ export function ScheduledWorkFormModal({
 
     const commonInput = {
       sectorId,
-      groupId: values.groupId,
+      groupIds: values.groupIds,
       title: values.title,
       description: values.description.trim() || null,
       startAt,
@@ -224,9 +224,23 @@ export function ScheduledWorkFormModal({
 
   const allDay = form.values.allDay;
   const hasEnd = form.values.hasEnd;
+  const activeGroupIds = new Set(groups.map((group) => group.id));
+  const groupOptions = [
+    ...groups.map((group) => ({
+      value: group.id,
+      label: group.name,
+    })),
+    ...(item?.groups ?? [])
+      .filter((group) => group.isArchived && !activeGroupIds.has(group.id))
+      .map((group) => ({
+        value: group.id,
+        label: `${group.name} (archiviato)`,
+        disabled: true,
+      })),
+  ].toSorted((left, right) => left.label.localeCompare(right.label, "it"));
   const isFormComplete =
     form.values.title.trim().length > 0 &&
-    form.values.groupId.length > 0 &&
+    form.values.groupIds.length > 0 &&
     form.values.startDate.length > 0 &&
     (allDay || form.values.startTime.length > 0) &&
     (!hasEnd || (form.values.endDate.length > 0 && (allDay || form.values.endTime.length > 0)));
@@ -252,14 +266,16 @@ export function ScheduledWorkFormModal({
                 key={form.key("title")}
                 {...form.getInputProps("title")}
               />
-              <Select
-                label="Gruppo"
-                placeholder="Seleziona un gruppo"
+              <MultiSelect
+                label="Gruppi"
+                description="Puoi selezionare uno o più gruppi."
+                placeholder="Seleziona uno o più gruppi"
                 required
                 searchable
-                data={groups.map((group) => ({ value: group.id, label: group.name }))}
-                key={form.key("groupId")}
-                {...form.getInputProps("groupId")}
+                clearable
+                data={groupOptions}
+                key={form.key("groupIds")}
+                {...form.getInputProps("groupIds")}
               />
             </SimpleGrid>
             <Textarea

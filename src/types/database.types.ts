@@ -390,7 +390,6 @@ export type Database = {
           created_by: string | null;
           description: string | null;
           end_at: string | null;
-          group_id: string;
           id: string;
           sector_id: string;
           start_at: string;
@@ -403,7 +402,6 @@ export type Database = {
           created_by?: string | null;
           description?: string | null;
           end_at?: string | null;
-          group_id: string;
           id?: string;
           sector_id: string;
           start_at: string;
@@ -416,7 +414,6 @@ export type Database = {
           created_by?: string | null;
           description?: string | null;
           end_at?: string | null;
-          group_id?: string;
           id?: string;
           sector_id?: string;
           start_at?: string;
@@ -432,17 +429,40 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "scheduled_work_group_fkey";
-            columns: ["sector_id", "group_id"];
-            isOneToOne: false;
-            referencedRelation: "group_nodes";
-            referencedColumns: ["sector_id", "id"];
-          },
-          {
             foreignKeyName: "scheduled_work_sector_id_fkey";
             columns: ["sector_id"];
             isOneToOne: false;
             referencedRelation: "sectors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      scheduled_work_groups: {
+        Row: {
+          group_id: string;
+          scheduled_work_id: string;
+        };
+        Insert: {
+          group_id: string;
+          scheduled_work_id: string;
+        };
+        Update: {
+          group_id?: string;
+          scheduled_work_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_work_groups_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "group_nodes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scheduled_work_groups_scheduled_work_id_fkey";
+            columns: ["scheduled_work_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_work";
             referencedColumns: ["id"];
           },
         ];
@@ -500,6 +520,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_scheduled_work_with_groups: {
+        Args: {
+          p_all_day: boolean;
+          p_description: string | null;
+          p_end_at: string | null;
+          p_group_ids: string[];
+          p_sector_id: string;
+          p_start_at: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
       create_reminder_with_assignees: {
         Args: {
           p_assignee_ids: string[];
@@ -541,6 +573,19 @@ export type Database = {
           p_priority: string;
           p_reminder_id: string;
           p_sector_id: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
+      update_scheduled_work_with_groups: {
+        Args: {
+          p_all_day: boolean;
+          p_description: string | null;
+          p_end_at: string | null;
+          p_group_ids: string[];
+          p_scheduled_work_id: string;
+          p_sector_id: string;
+          p_start_at: string;
           p_title: string;
         };
         Returns: string;
