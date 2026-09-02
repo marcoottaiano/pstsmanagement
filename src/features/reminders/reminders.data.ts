@@ -11,12 +11,13 @@ import { createClient } from "@/lib/supabase/server";
 import {
   reminderAssigneeRowSchema,
   reminderDatabaseSchema,
+  reminderGroupRowSchema,
   reminderProfileSchema,
 } from "./reminders.schemas";
-import type { Reminder, ReminderPerson } from "./reminders.types";
+import type { Reminder, ReminderGroup, ReminderPerson } from "./reminders.types";
 
 const reminderColumns =
-  "id, sector_id, group_id, title, description, due_at, due_all_day, status, completed_at, completed_late, priority, created_by, created_at, updated_at";
+  "id, sector_id, title, description, due_at, due_all_day, status, completed_at, completed_late, priority, created_by, created_at, updated_at";
 
 function databaseReadError(label: string, error: { code?: string; message: string }): never {
   console.error(`${label} query failed.`, { code: error.code, message: error.message });
@@ -89,19 +90,13 @@ export async function getReminderAssigneeOptions(
 export async function getVisibleReminders(
   sectorId: string,
   scopedGroupIds: readonly string[] | null,
-  nodeNames: ReadonlyMap<string, string>,
 ): Promise<readonly Reminder[]> {
   const supabase = await createClient();
-  let query = supabase.from("reminders").select(reminderColumns).eq("sector_id", sectorId);
-
-  if (scopedGroupIds) {
-    query =
-      scopedGroupIds.length === 0
-        ? query.is("group_id", null)
-        : query.or(`group_id.is.null,group_id.in.(${scopedGroupIds.join(",")})`);
-  }
-
-  const { data, error } = await query.order("due_at", { ascending: true, nullsFirst: false });
+  const { data, error } = await supabase
+    .from("reminders")
+    .select(reminderColumns)
+    .eq("sector_id", sectorId)
+    .order("due_at", { ascending: true, nullsFirst: false });
   if (error) {
     databaseReadError("Reminders", error);
   }
@@ -119,10 +114,18 @@ export async function getVisibleReminders(
     return [];
   }
 
-  const { data: assigneeRows, error: assigneeError } = await supabase
-    .from("reminder_assignees")
-    .select("reminder_id, user_id")
-    .in("reminder_id", reminderIds);
+  const [assigneeResult, groupResult] = await Promise.all([
+    supabase
+      .from("reminder_assignees")
+      .select("reminder_id, user_id")
+      .in("reminder_id", reminderIds),
+    supabase
+      .from("reminder_groups")
+      .select("reminder_id, group_id, group_nodes(name, is_archived)")
+      .in("reminder_id", reminderIds),
+  ]);
+
+  const { data: assigneeRows, error: assigneeError } = assigneeResult;
 
   if (assigneeError) {
     databaseReadError("Reminder assignees", assigneeError);
@@ -134,6 +137,18 @@ export async function getVisibleReminders(
       issues: parsedAssignees.error.issues,
     });
     throw new Error("Gli assegnatari restituiti dal database non sono validi.");
+  }
+
+  if (groupResult.error) {
+    databaseReadError("Reminder groups", groupResult.error);
+  }
+
+  const parsedGroups = reminderGroupRowSchema.array().safeParse(groupResult.data);
+  if (!parsedGroups.success) {
+    console.error("Reminder groups failed validation.", {
+      issues: parsedGroups.error.issues,
+    });
+    throw new Error("I gruppi dei promemoria restituiti dal database non sono validi.");
   }
 
   const profileIds = [...new Set(parsedAssignees.data.map((row) => row.user_id))];
@@ -173,11 +188,36 @@ export async function getVisibleReminders(
     assigneesByReminder.set(row.reminder_id, assignees);
   }
 
-  return parsedReminders.data.map((reminder) => ({
-    ...reminder,
-    groupName: reminder.groupId
-      ? (nodeNames.get(reminder.groupId) ?? "Voce della struttura")
-      : null,
-    assignees: assigneesByReminder.get(reminder.id) ?? [],
-  }));
+  const groupsByReminder = new Map<string, ReminderGroup[]>();
+  for (const row of parsedGroups.data) {
+    const groups = groupsByReminder.get(row.reminder_id) ?? [];
+    groups.push({
+      id: row.group_id,
+      name: row.group_nodes.name,
+      isArchived: row.group_nodes.is_archived,
+    });
+    groupsByReminder.set(row.reminder_id, groups);
+  }
+
+  const visibleGroupIds = scopedGroupIds ? new Set(scopedGroupIds) : null;
+
+  return parsedReminders.data.flatMap((reminder) => {
+    const groups = (groupsByReminder.get(reminder.id) ?? []).toSorted((left, right) =>
+      left.name.localeCompare(right.name, "it"),
+    );
+    const isVisible =
+      visibleGroupIds === null ||
+      groups.length === 0 ||
+      groups.some((group) => visibleGroupIds.has(group.id));
+
+    return isVisible
+      ? [
+          {
+            ...reminder,
+            groups,
+            assignees: assigneesByReminder.get(reminder.id) ?? [],
+          },
+        ]
+      : [];
+  });
 }

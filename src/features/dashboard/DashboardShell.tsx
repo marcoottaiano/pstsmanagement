@@ -77,7 +77,8 @@ export function DashboardShell({
     work.groups.some((group) => scopeGroupIdSet.has(group.id)),
   );
   const visibleReminders = dashboardData.reminders.filter(
-    (reminder) => !reminder.groupId || scopedNodeIds.has(reminder.groupId),
+    (reminder) =>
+      reminder.groups.length === 0 || reminder.groups.some((group) => scopedNodeIds.has(group.id)),
   );
   const visibleObjectives = dashboardData.objectives.filter((objective) =>
     scopeGroupIdSet.has(objective.groupId),
@@ -158,7 +159,7 @@ export function DashboardShell({
             <ReminderSidebarCard
               sectorId={activeSector.id}
               reminders={visibleReminders}
-              nodes={visibleGroups}
+              nodes={dashboardData.selectableGroups}
               assigneeOptions={dashboardData.assigneeOptions}
               currentUserId={currentUserId}
               preferredNodeId={preferredGroupId}

@@ -54,7 +54,7 @@ const QUICK_START_SECTION = {
       number: 4,
       title: "Aggiungere Promemoria",
       description:
-        "Nel pannello 'Promemoria', clicca 'Nuovo', inserisci il titolo, scegli il gruppo se serve, imposta la scadenza e salva.",
+        "Nel pannello 'Promemoria', clicca 'Nuovo', inserisci il titolo, scegli i gruppi se servono, imposta la scadenza e salva.",
       icon: IconBell,
     },
     {
@@ -120,7 +120,7 @@ const GUIDE_STEPS = [
     emoji: "🔔",
     shortDescription: "Crea reminder personali o di gruppo con scadenze",
     canDo: [
-      "Creare promemoria personali per te o associati a un gruppo specifico.",
+      "Creare promemoria personali per te o associati a uno o più gruppi.",
       "Impostare priorità (bassa, media, alta, urgente), scadenza e più assegnatari.",
       "Completare un promemoria e riaprirlo se serve ricominciare da dove l'hai lasciato.",
       "Visualizzare i promemoria sia nel pannello dedicato che nel Calendario (se hanno una data).",

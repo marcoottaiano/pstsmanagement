@@ -347,7 +347,7 @@ export function DashboardCalendar({
           key={modalState.key}
           opened
           sectorId={sector.id}
-          nodes={groups}
+          nodes={workGroupOptions}
           assigneeOptions={assigneeOptions}
           currentUserId={currentUserId}
           preferredNodeId={preferredGroupId}

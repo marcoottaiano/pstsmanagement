@@ -12,6 +12,7 @@ import {
 import { calendarExportQuerySchema } from "@/features/exports/export.schemas";
 import { getGroupNodes } from "@/features/groups/groups.data";
 import { getVisibleReminders } from "@/features/reminders/reminders.data";
+import { getReminderGroupNames } from "@/features/reminders/reminders.mapper";
 import { getScheduledWorkForVisibleRange } from "@/features/scheduled-work/scheduled-work.data";
 import { getScheduledWorkGroupNames } from "@/features/scheduled-work/scheduled-work.mapper";
 import {
@@ -58,11 +59,10 @@ export async function GET(request: Request): Promise<Response> {
   const allowedGroupIds = new Set(groups.map((group) => group.id));
   const selectedGroupIds = parsed.data.groups.filter((groupId) => allowedGroupIds.has(groupId));
   const groupIds = selectedGroupIds.length > 0 ? selectedGroupIds : groups.map((group) => group.id);
-  const groupNames = new Map(groups.map((group) => [group.id, group.name]));
   const range = getVisibleMonthRange(parsed.data.date);
   const [scheduledWork, reminders] = await Promise.all([
     getScheduledWorkForVisibleRange(authorization.sector.id, groupIds, range.startAt, range.endAt),
-    getVisibleReminders(authorization.sector.id, groupIds, groupNames),
+    getVisibleReminders(authorization.sector.id, groupIds),
   ]);
   const calendarItems: readonly CalendarExportItem[] = [
     ...scheduledWork.map((item) => ({
@@ -82,7 +82,7 @@ export async function GET(request: Request): Promise<Response> {
         title: item.title,
         type: "Promemoria" as const,
         date: formatDate(item.dueAt as string, item.dueAllDay),
-        groupName: item.groupName,
+        groupName: getReminderGroupNames(item),
       })),
   ].sort((left, right) => left.date.localeCompare(right.date, "it"));
   const documentData = {

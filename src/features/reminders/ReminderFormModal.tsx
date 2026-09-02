@@ -16,7 +16,6 @@ import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 
 import type { GroupNode } from "@/features/groups/groups.types";
-import { getGroupNodePath } from "@/features/groups/groups.utils";
 
 import { createReminder, deleteReminder, updateReminder } from "./reminders.actions";
 import { reminderDueToFormParts, reminderDueToIso } from "./reminders.dates";
@@ -38,7 +37,7 @@ type ReminderFormModalProps = Readonly<{
 type FormValues = {
   title: string;
   description: string;
-  groupId: string;
+  groupIds: string[];
   priority: string;
   assigneeIds: string[];
   dueDate: string;
@@ -61,7 +60,7 @@ function getInitialValues(
     return {
       title: "",
       description: "",
-      groupId: preferredNodeId ?? "",
+      groupIds: preferredNodeId ? [preferredNodeId] : [],
       priority: "NORMAL",
       assigneeIds: assigneeOptions.some((option) => option.id === currentUserId)
         ? [currentUserId]
@@ -75,7 +74,7 @@ function getInitialValues(
   return {
     title: item.title,
     description: item.description ?? "",
-    groupId: item.groupId ?? "",
+    groupIds: item.groups.map((group) => group.id),
     priority: item.priority,
     assigneeIds: item.assignees.map((assignee) => assignee.id),
     dueDate: due?.date ?? "",
@@ -130,7 +129,7 @@ export function ReminderFormModal({
 
     const commonInput = {
       sectorId,
-      groupId: values.groupId || null,
+      groupIds: values.groupIds,
       title: values.title,
       description: values.description.trim() || null,
       dueAt,
@@ -198,6 +197,20 @@ export function ReminderFormModal({
   }
 
   const isFormComplete = form.values.title.trim().length > 0;
+  const activeGroupIds = new Set(nodes.map((node) => node.id));
+  const groupOptions = [
+    ...nodes.map((node) => ({
+      value: node.id,
+      label: node.name,
+    })),
+    ...(item?.groups ?? [])
+      .filter((group) => group.isArchived && !activeGroupIds.has(group.id))
+      .map((group) => ({
+        value: group.id,
+        label: `${group.name} (archiviato)`,
+        disabled: true,
+      })),
+  ].toSorted((left, right) => left.label.localeCompare(right.label, "it"));
 
   return (
     <>
@@ -229,20 +242,15 @@ export function ReminderFormModal({
               {...form.getInputProps("description")}
             />
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-              <Select
-                label="Gruppo"
+              <MultiSelect
+                label="Gruppi"
                 description="Lascia vuoto per un promemoria personale."
-                placeholder="Nessuna associazione"
+                placeholder="Seleziona uno o più gruppi"
                 clearable
                 searchable
-                data={nodes.map((node) => ({
-                  value: node.id,
-                  label: getGroupNodePath(nodes, node)
-                    .map((pathNode) => pathNode.name)
-                    .join(" / "),
-                }))}
-                key={form.key("groupId")}
-                {...form.getInputProps("groupId")}
+                data={groupOptions}
+                key={form.key("groupIds")}
+                {...form.getInputProps("groupIds")}
               />
               <MultiSelect
                 label="Assegnatari"

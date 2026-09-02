@@ -68,7 +68,7 @@ async function getSectorStatistics(sectorId: string): Promise<SectorStatistics> 
   const [scheduledWork, upcomingWork, reminders, objectives] = await Promise.all([
     getScheduledWorkForVisibleRange(sectorId, groupIds, monthRange.startAt, monthRange.endAt),
     getScheduledWorkForVisibleRange(sectorId, groupIds, upcomingRange.startAt, upcomingRange.endAt),
-    getVisibleReminders(sectorId, null, groupNames),
+    getVisibleReminders(sectorId, null),
     getObjectivesForScope(sectorId, groupIds, groupNames),
   ]);
 
@@ -112,7 +112,7 @@ export default async function AdminStatisticsPage({ searchParams }: AdminStatist
       reportRange.startAt,
       reportRange.endAt,
     ),
-    getVisibleReminders(activeSector.id, selectedGroup ? reportGroupIds : null, groupNames),
+    getVisibleReminders(activeSector.id, selectedGroup ? reportGroupIds : null),
     getObjectivesForScope(activeSector.id, reportGroupIds, groupNames),
   ]);
   const monthlyReminders = reportReminders.filter((item) =>

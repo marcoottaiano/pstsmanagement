@@ -310,6 +310,36 @@ export type Database = {
           },
         ];
       };
+      reminder_groups: {
+        Row: {
+          group_id: string;
+          reminder_id: string;
+        };
+        Insert: {
+          group_id: string;
+          reminder_id: string;
+        };
+        Update: {
+          group_id?: string;
+          reminder_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_groups_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "group_nodes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reminder_groups_reminder_id_fkey";
+            columns: ["reminder_id"];
+            isOneToOne: false;
+            referencedRelation: "reminders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       reminders: {
         Row: {
           completed_at: string | null;
@@ -319,7 +349,6 @@ export type Database = {
           description: string | null;
           due_all_day: boolean;
           due_at: string | null;
-          group_id: string | null;
           id: string;
           priority: string;
           sector_id: string;
@@ -335,7 +364,6 @@ export type Database = {
           description?: string | null;
           due_all_day?: boolean;
           due_at?: string | null;
-          group_id?: string | null;
           id?: string;
           priority?: string;
           sector_id: string;
@@ -351,7 +379,6 @@ export type Database = {
           description?: string | null;
           due_all_day?: boolean;
           due_at?: string | null;
-          group_id?: string | null;
           id?: string;
           priority?: string;
           sector_id?: string;
@@ -366,13 +393,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "reminders_group_fkey";
-            columns: ["sector_id", "group_id"];
-            isOneToOne: false;
-            referencedRelation: "group_nodes";
-            referencedColumns: ["sector_id", "id"];
           },
           {
             foreignKeyName: "reminders_sector_id_fkey";
@@ -538,7 +558,7 @@ export type Database = {
           p_description: string | null;
           p_due_all_day: boolean;
           p_due_at: string | null;
-          p_group_id: string | null;
+          p_group_ids: string[];
           p_priority: string;
           p_sector_id: string;
           p_title: string;
@@ -569,7 +589,7 @@ export type Database = {
           p_description: string | null;
           p_due_all_day: boolean;
           p_due_at: string | null;
-          p_group_id: string | null;
+          p_group_ids: string[];
           p_priority: string;
           p_reminder_id: string;
           p_sector_id: string;

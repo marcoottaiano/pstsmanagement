@@ -41,19 +41,21 @@ function getGroupWorkloads(
   }
 
   for (const reminder of reminders) {
-    if (reminder.status !== "OPEN" || !reminder.groupId) {
+    if (reminder.status !== "OPEN") {
       continue;
     }
-    const current = workloads.get(reminder.groupId) ?? {
-      groupId: reminder.groupId,
-      groupName: reminder.groupName ?? "Gruppo non disponibile",
-      scheduledWorkCount: 0,
-      openReminderCount: 0,
-    };
-    workloads.set(reminder.groupId, {
-      ...current,
-      openReminderCount: current.openReminderCount + 1,
-    });
+    for (const group of reminder.groups) {
+      const current = workloads.get(group.id) ?? {
+        groupId: group.id,
+        groupName: group.name,
+        scheduledWorkCount: 0,
+        openReminderCount: 0,
+      };
+      workloads.set(group.id, {
+        ...current,
+        openReminderCount: current.openReminderCount + 1,
+      });
+    }
   }
 
   return [...workloads.values()].sort(

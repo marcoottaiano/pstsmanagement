@@ -16,11 +16,10 @@ export async function getDashboardData(
   const selectableGroups: readonly GroupNode[] = nodes;
   const groupIds = selectableGroups.map((group) => group.id);
   const groupNames = new Map(selectableGroups.map((group) => [group.id, group.name]));
-  const nodeNames = new Map(nodes.map((node) => [node.id, node.name]));
   const range = getVisibleMonthRange(calendarDate);
   const [scheduledWork, reminders, assigneeOptions, objectives] = await Promise.all([
     getScheduledWorkForVisibleRange(sector.id, groupIds, range.startAt, range.endAt),
-    getVisibleReminders(sector.id, null, nodeNames),
+    getVisibleReminders(sector.id, null),
     getReminderAssigneeOptions(sector.id),
     getObjectivesForScope(sector.id, groupIds, groupNames),
   ]);

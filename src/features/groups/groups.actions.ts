@@ -184,8 +184,8 @@ export async function deleteGroupNode(input: DeleteGroupNodeInput): Promise<Grou
       .select("scheduled_work_id", { count: "exact", head: true })
       .eq("group_id", parsed.data.nodeId),
     supabase
-      .from("reminders")
-      .select("id", { count: "exact", head: true })
+      .from("reminder_groups")
+      .select("reminder_id", { count: "exact", head: true })
       .eq("group_id", parsed.data.nodeId),
     supabase
       .from("objectives")

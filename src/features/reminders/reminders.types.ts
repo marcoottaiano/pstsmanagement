@@ -30,9 +30,15 @@ export type ReminderPerson = Readonly<{
   avatar: UserAvatar;
 }>;
 
+export type ReminderGroup = Readonly<{
+  id: string;
+  name: string;
+  isArchived: boolean;
+}>;
+
 export type Reminder = ReminderRecord &
   Readonly<{
-    groupName: string | null;
+    groups: readonly ReminderGroup[];
     assignees: readonly ReminderPerson[];
   }>;
 

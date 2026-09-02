@@ -5,6 +5,7 @@ import { IconFileDescription, IconPrinter } from "@tabler/icons-react";
 
 import type { Objective } from "@/features/objectives/objectives.types";
 import type { Reminder } from "@/features/reminders/reminders.types";
+import { getReminderGroupNames } from "@/features/reminders/reminders.mapper";
 import { getScheduledWorkGroupNames } from "@/features/scheduled-work/scheduled-work.mapper";
 import type { ScheduledWorkCalendarItem } from "@/features/scheduled-work/scheduled-work.types";
 
@@ -146,7 +147,7 @@ export function MonthlyReport({
         items={reminders.map((item) => ({
           id: item.id,
           title: item.title,
-          detail: `${item.groupName ?? "Generale"} | ${item.status === "OPEN" ? "Aperto" : `${item.completedLate ? "Completato in ritardo" : "Completato"}${item.completedAt ? ` il ${formatCompletionDateTime(item.completedAt)}` : ""}`}`,
+          detail: `${getReminderGroupNames(item)} | ${item.status === "OPEN" ? "Aperto" : `${item.completedLate ? "Completato in ritardo" : "Completato"}${item.completedAt ? ` il ${formatCompletionDateTime(item.completedAt)}` : ""}`}`,
         }))}
       />
       <ReportList

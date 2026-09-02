@@ -35,8 +35,12 @@ async function canAccessSector(sectorId: string): Promise<boolean> {
   return Boolean(context?.sectors.some((sector) => sector.id === sectorId));
 }
 
-async function isActiveNodeInSector(sectorId: string, groupId: string | null): Promise<boolean> {
-  if (!groupId) {
+async function areActiveGroupsInSector(
+  sectorId: string,
+  groupIds: readonly string[],
+  reminderId?: string,
+): Promise<boolean> {
+  if (groupIds.length === 0) {
     return true;
   }
 
@@ -44,12 +48,31 @@ async function isActiveNodeInSector(sectorId: string, groupId: string | null): P
   const { data, error } = await supabase
     .from("group_nodes")
     .select("id")
-    .eq("id", groupId)
     .eq("sector_id", sectorId)
     .eq("is_archived", false)
-    .maybeSingle();
+    .in("id", [...groupIds]);
 
-  return !error && data !== null;
+  if (error) {
+    return false;
+  }
+
+  const allowedGroupIds = new Set(data.map((group) => group.id));
+  if (reminderId && allowedGroupIds.size < groupIds.length) {
+    const { data: existingGroups, error: existingGroupsError } = await supabase
+      .from("reminder_groups")
+      .select("group_id")
+      .eq("reminder_id", reminderId)
+      .in("group_id", [...groupIds]);
+
+    if (existingGroupsError) {
+      return false;
+    }
+    for (const existingGroup of existingGroups) {
+      allowedGroupIds.add(existingGroup.group_id);
+    }
+  }
+
+  return allowedGroupIds.size === groupIds.length;
 }
 
 async function assigneesBelongToSector(
@@ -76,15 +99,16 @@ async function assigneesBelongToSector(
 
 async function canSaveReminder(
   sectorId: string,
-  groupId: string | null,
+  groupIds: readonly string[],
   assigneeIds: readonly string[],
+  reminderId?: string,
 ): Promise<boolean> {
   if (!(await canAccessSector(sectorId))) {
     return false;
   }
 
   const [validGroup, validAssignees] = await Promise.all([
-    isActiveNodeInSector(sectorId, groupId),
+    areActiveGroupsInSector(sectorId, groupIds, reminderId),
     assigneesBelongToSector(sectorId, assigneeIds),
   ]);
   return validGroup && validAssignees;
@@ -98,7 +122,7 @@ export async function createReminder(input: CreateReminderInput): Promise<Remind
   const parsed = createReminderSchema.safeParse(input);
   if (
     !parsed.success ||
-    !(await canSaveReminder(parsed.data.sectorId, parsed.data.groupId, parsed.data.assigneeIds))
+    !(await canSaveReminder(parsed.data.sectorId, parsed.data.groupIds, parsed.data.assigneeIds))
   ) {
     return invalidInputResult();
   }
@@ -106,7 +130,7 @@ export async function createReminder(input: CreateReminderInput): Promise<Remind
   const supabase = await createClient();
   const { error } = await supabase.rpc("create_reminder_with_assignees", {
     p_sector_id: parsed.data.sectorId,
-    p_group_id: parsed.data.groupId,
+    p_group_ids: parsed.data.groupIds,
     p_title: parsed.data.title,
     p_description: parsed.data.description,
     p_due_at: parsed.data.dueAt,
@@ -127,7 +151,12 @@ export async function updateReminder(input: UpdateReminderInput): Promise<Remind
   const parsed = updateReminderSchema.safeParse(input);
   if (
     !parsed.success ||
-    !(await canSaveReminder(parsed.data.sectorId, parsed.data.groupId, parsed.data.assigneeIds))
+    !(await canSaveReminder(
+      parsed.data.sectorId,
+      parsed.data.groupIds,
+      parsed.data.assigneeIds,
+      parsed.data.id,
+    ))
   ) {
     return invalidInputResult();
   }
@@ -136,7 +165,7 @@ export async function updateReminder(input: UpdateReminderInput): Promise<Remind
   const { error } = await supabase.rpc("update_reminder_with_assignees", {
     p_reminder_id: parsed.data.id,
     p_sector_id: parsed.data.sectorId,
-    p_group_id: parsed.data.groupId,
+    p_group_ids: parsed.data.groupIds,
     p_title: parsed.data.title,
     p_description: parsed.data.description,
     p_due_at: parsed.data.dueAt,

@@ -13,6 +13,12 @@ export function toReminderCalendarItem(reminder: Reminder): ReminderCalendarItem
   return { ...reminder, itemType: "reminder" };
 }
 
+export function getReminderGroupNames(reminder: Reminder): string {
+  return reminder.groups.length > 0
+    ? reminder.groups.map((group) => group.name).join(" · ")
+    : "Personale";
+}
+
 export function toReminderEvent(item: ReminderCalendarItem): EventInput {
   const completed = item.status === "COMPLETED";
   const color = completed ? "#868e96" : PRIORITY_COLORS[item.priority];
@@ -32,8 +38,8 @@ export function toReminderEvent(item: ReminderCalendarItem): EventInput {
       itemId: item.id,
       itemType: "reminder",
       sectorId: item.sectorId,
-      groupId: item.groupId,
-      groupName: item.groupName ?? "Personale",
+      groupIds: item.groups.map((group) => group.id),
+      groupName: getReminderGroupNames(item),
       priority: item.priority,
       status: item.status,
     },

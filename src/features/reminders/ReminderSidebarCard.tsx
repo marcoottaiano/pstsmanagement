@@ -37,6 +37,7 @@ import { celebrateFromElement } from "@/lib/celebration";
 
 import { updateReminderStatus } from "./reminders.actions";
 import { formatReminderDue } from "./reminders.dates";
+import { getReminderGroupNames } from "./reminders.mapper";
 import type { Reminder, ReminderPerson, ReminderPriority } from "./reminders.types";
 import { getReminderSections, type ReminderSection } from "./reminders.utils";
 import { ReminderFormModal } from "./ReminderFormModal";
@@ -224,7 +225,7 @@ export function ReminderSidebarCard({
                                     ) : null}
                                   </Group>
                                   <Text c="dimmed" size="xs">
-                                    {reminder.groupName ?? "Personale"}
+                                    {getReminderGroupNames(reminder)}
                                     {reminder.dueAt
                                       ? ` · ${formatReminderDue(reminder.dueAt, reminder.dueAllDay)}`
                                       : " · Nessuna scadenza"}

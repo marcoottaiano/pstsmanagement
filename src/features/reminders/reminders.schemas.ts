@@ -8,13 +8,19 @@ const titleSchema = z
   .min(1, "Inserisci un titolo.")
   .max(200, "Il titolo è troppo lungo.");
 const descriptionSchema = z.string().trim().max(2_000, "La descrizione è troppo lunga.").nullable();
+const groupIdsSchema = z
+  .array(uuidSchema)
+  .max(100)
+  .refine((groupIds) => new Set(groupIds).size === groupIds.length, {
+    message: "Ogni gruppo può essere selezionato una sola volta.",
+  });
 
 export const reminderStatusSchema = z.enum(["OPEN", "COMPLETED"]);
 export const reminderPrioritySchema = z.enum(["LOW", "NORMAL", "HIGH"]);
 
 const reminderFields = {
   sectorId: uuidSchema,
-  groupId: uuidSchema.nullable(),
+  groupIds: groupIdsSchema,
   title: titleSchema,
   description: descriptionSchema,
   dueAt: timestampSchema.nullable(),
@@ -30,7 +36,6 @@ export const reminderDatabaseSchema = z
   .object({
     id: uuidSchema,
     sector_id: uuidSchema,
-    group_id: uuidSchema.nullable(),
     title: z.string().min(1),
     description: z.string().nullable(),
     due_at: timestampSchema.nullable(),
@@ -46,7 +51,6 @@ export const reminderDatabaseSchema = z
   .transform((reminder) => ({
     id: reminder.id,
     sectorId: reminder.sector_id,
-    groupId: reminder.group_id,
     title: reminder.title,
     description: reminder.description,
     dueAt: reminder.due_at,
@@ -72,6 +76,15 @@ export const reminderProfileSchema = z.object({
 export const reminderAssigneeRowSchema = z.object({
   reminder_id: uuidSchema,
   user_id: uuidSchema,
+});
+
+export const reminderGroupRowSchema = z.object({
+  reminder_id: uuidSchema,
+  group_id: uuidSchema,
+  group_nodes: z.object({
+    name: z.string().min(1),
+    is_archived: z.boolean(),
+  }),
 });
 
 export const createReminderSchema = z.object(reminderFields);
